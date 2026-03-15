@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  /* Noir Luxury Backgrounds */
+  --color-noir-bg: #0A0A0A;
+  --color-noir-surface: #121212;
+  --color-noir-card: #1A1A1A;
+  --color-noir-elevated: #242424;
+  --color-noir-border: #2A2A2A;
+
+  /* Gold System */
+  --color-gold-primary: #C9A84C;
+  --color-gold-light: #E8D5A3;
+  --color-gold-dark: #8B7332;
+  --color-gold-muted: #6B5B33;
+  --color-gold-faint: #3D3420;
+  --color-gold-border: #4A3F28;
+
+  /* Text Colors */
+  --color-text-primary: #F5F0E8;
+  --color-text-secondary: #B8B0A0;
+  --color-text-muted: #6B6560;
+
+  /* Felt */
+  --color-felt: #0D4A2B;
+  --color-felt-dark: #0A3A22;
+  --color-felt-light: #1a6b42;
+
+  /* Status */
+  --color-status-danger: #DC2626;
+  --color-status-warning: #F59E0B;
+  --color-status-success: #22C55E;
+
+  /* Fonts */
+  --font-display: 'Cinzel', serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-body: 'Inter', sans-serif;
+
+  /* Shadows */
+  --shadow-table: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 2px 4px rgba(255, 255, 255, 0.05);
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-gold-glow: 0 0 20px rgba(201, 168, 76, 0.3);
+}
+
+/* Base styles */
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-noir-bg);
+  color: var(--color-text-primary);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Poker table felt gradient */
+.poker-table-felt {
+  background: radial-gradient(ellipse at center, #1a6b42 0%, #0d4a2b 50%, #083d22 100%);
+}
+
+/* Gold text gradient */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #E8D5A3 0%, #C9A84C 50%, #8B7332 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Card flip animation */
+.card-flip {
+  perspective: 1000px;
+}
+
+.card-flip-inner {
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.card-flip-inner.flipped {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  backface-visibility: hidden;
+  position: absolute;
+  inset: 0;
+}
+
+.card-back {
+  transform: rotateY(0deg);
+}
+
+.card-front {
+  transform: rotateY(180deg);
+}
+
+/* Gauge animation */
+.gauge-transition {
+  transition: stroke-dashoffset 0.3s ease-out;
+}
+
+/* Button press effect */
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* Chip count animation */
+@keyframes chipPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.chip-pulse {
+  animation: chipPulse 0.4s ease-out;
+}
+
+/* Card deal animation (template-inspired) */
+@keyframes cDeal {
+  from { transform: translateY(-13px) scale(.9) rotate(-1.5deg); opacity: 0 }
+  to { transform: none; opacity: 1 }
+}
+
+/* Action badge fade-in */
+@keyframes fadeUp {
+  from { opacity: 0; transform: scale(.82) }
+  to { opacity: 1; transform: none }
+}
+
+/* Ambient table glow */
+@keyframes aGlow {
+  from { opacity: .45; transform: scale(.97) }
+  to { opacity: 1; transform: scale(1.02) }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-noir-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-noir-elevated);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gold-muted);
+}
