@@ -25125,5 +25125,42 @@
     "handStrengthPercentile": 25.2,
     "betSizeRatio": 0.53,
     "street": "TURN"
+  },
+  {
+    "timestamp": 1773677179.0388114,
+    "playerId": "bEOsBd5x0Co98b_2Mj34f",
+    "playerName": "You",
+    "holeCards": [
+      {
+        "rank": "8",
+        "suit": "d"
+      },
+      {
+        "rank": "6",
+        "suit": "d"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "J",
+        "suit": "d"
+      },
+      {
+        "rank": "4",
+        "suit": "h"
+      },
+      {
+        "rank": "T",
+        "suit": "s"
+      },
+      {
+        "rank": "Q",
+        "suit": "c"
+      }
+    ],
+    "tag": "BLUFF",
+    "handStrengthPercentile": 6.0,
+    "betSizeRatio": 14.0,
+    "street": "TURN"
   }
 ]

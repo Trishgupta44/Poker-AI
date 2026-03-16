@@ -16,6 +16,25 @@ interface PokerTableProps {
   actions?: PlayerAction[];
 }
 
+function getSeatLayout(playerCount: number): Array<{ x: string; y: string }> {
+  // Using the explicit left (x) and top (y) values to ensure the elements are properly centered
+  const bottomCenter = { x: '45%', y: 'calc(85% + 20px)' };
+  const topCenter    = { x: '45%', y: '-20%' };
+  const leftCenter   = { x: '-6%',  y: '40%' };
+  const rightCenter  = { x: '93%', y: '40%' };
+
+  if (playerCount === 2) {
+    return [bottomCenter, topCenter];
+  }
+  
+  if (playerCount === 3) {
+    return [bottomCenter, leftCenter, rightCenter];
+  }
+
+  // 4 or more players (falls back to 4 max supported by this specific layout)
+  return [bottomCenter, leftCenter, topCenter, rightCenter];
+}
+
 export function PokerTable({
   players,
   communityCards,
@@ -39,12 +58,8 @@ export function PokerTable({
     }
   });
 
-  // Equidistant seat placement on an ellipse around the table.
-  // Radii are % of the outer container (16:9 aspect ratio).
-  // Table occupies ~83% x 70% centered, so seats at these radii sit just outside the edge.
-  // rx kept tighter to prevent overlap with the AI sidebar panel.
-  const rx = 38;
-  const ry = 50;
+  // Edge-based player seats positioning.
+  // The table visually occupies left: 8.5%, right: 91.5%, top: 15%, bottom: 85% of the container.
 
   return (
     <div className="relative w-full max-w-[800px] mx-auto overflow-visible" style={{ aspectRatio: '16/9' }}>
@@ -78,7 +93,7 @@ export function PokerTable({
           style={{
             width: '100%',
             height: '100%',
-            borderRadius: 9999,
+            borderRadius: 120,
             background: 'linear-gradient(160deg, #1a1a1a, #0d0d0d)',
             boxShadow: '0 22px 75px rgba(0,0,0,.88), inset 0 1px 0 rgba(255,255,255,.04)',
             padding: 7,
@@ -89,7 +104,7 @@ export function PokerTable({
             style={{
               width: '100%',
               height: '100%',
-              borderRadius: 9999,
+              borderRadius: 120,
               padding: 3,
               background: 'conic-gradient(from 0deg, #c9a84c 0%, #7a5210 18%, #c9a84c 36%, #e8c86a 54%, #7a5210 72%, #c9a84c 100%)',
               boxShadow: 'inset 0 2px 6px rgba(0,0,0,.5)',
@@ -100,7 +115,7 @@ export function PokerTable({
               style={{
                 width: '100%',
                 height: '100%',
-                borderRadius: 9999,
+                borderRadius: 120,
                 padding: 9,
                 background: 'radial-gradient(ellipse at 30% 25%, #271806, #130b03)',
                 boxShadow: 'inset 0 4px 18px rgba(0,0,0,.65)',
@@ -111,7 +126,7 @@ export function PokerTable({
                 style={{
                   width: '100%',
                   height: '100%',
-                  borderRadius: 9999,
+                  borderRadius: 120,
                   border: '1.5px solid rgba(201,168,76,.18)',
                   padding: 5,
                 }}
@@ -121,7 +136,7 @@ export function PokerTable({
                   style={{
                     width: '100%',
                     height: '100%',
-                    borderRadius: 9999,
+                    borderRadius: 120,
                     background: 'radial-gradient(ellipse at 42% 36%, #1d6530, #11401e, #0a2c14)',
                     position: 'relative',
                     overflow: 'hidden',
@@ -133,7 +148,7 @@ export function PokerTable({
                     style={{
                       position: 'absolute',
                       inset: 0,
-                      borderRadius: 9999,
+                      borderRadius: 120,
                       backgroundImage: `repeating-linear-gradient(0deg, rgba(0,0,0,.05) 0, rgba(0,0,0,.05) 1px, transparent 1px, transparent 3px),
                         repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0, rgba(0,0,0,.05) 1px, transparent 1px, transparent 3px)`,
                     }}
@@ -166,15 +181,16 @@ export function PokerTable({
         </div>
       </div>
 
-      {/* Equidistant player seats — angle-based placement on ellipse */}
-      {players.map((player, index) => {
+      {/* Edge-based player seats */}
+      {players.length > 0 && players.map((player, index) => {
         const shouldShowCards = isShowdown || player.id === showCardsForPlayerId;
 
-        // Rotate so hero is always at the bottom (angle = PI/2)
+        // Calculate offset relative to hero
         const offset = (index - heroIndex + players.length) % players.length;
-        const angle = (offset / players.length) * 2 * Math.PI + Math.PI / 2;
-        const x = 50 + rx * Math.cos(angle);
-        const y = 50 + ry * Math.sin(angle);
+        
+        const layout = getSeatLayout(players.length);
+        // Fallback to the first position if somehow offset is out of bounds
+        const position = layout[offset] || layout[0];
 
         return (
           <PlayerSeat
@@ -183,7 +199,7 @@ export function PokerTable({
             isActive={index === activePlayerIndex}
             isDealer={index === dealerIndex}
             showCards={shouldShowCards}
-            position={{ x: `${x.toFixed(1)}%`, y: `${y.toFixed(1)}%` }}
+            position={position}
             lastAction={lastActions.get(player.id)}
           />
         );
