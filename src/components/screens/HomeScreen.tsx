@@ -59,8 +59,8 @@ export function HomeScreen() {
         </button>
       </div>
 
-      {/* How to Play */}
-      <div className="mt-10">
+      {/* Secondary navigation */}
+      <div className="mt-10 flex flex-col sm:flex-row gap-4">
         <button
           onClick={() => navigate('/instructions')}
           className="group bg-noir-card border border-noir-border rounded-lg px-8 py-4 text-center
@@ -72,6 +72,19 @@ export function HomeScreen() {
           </h2>
           <p className="text-text-muted text-xs mt-1">
             Learn poker rules, hand rankings &amp; how the AI works
+          </p>
+        </button>
+        <button
+          onClick={() => navigate('/stats')}
+          className="group bg-noir-card border border-noir-border rounded-lg px-8 py-4 text-center
+                     hover:border-gold-primary/50 hover:shadow-[0_0_20px_rgba(201,168,76,0.1)]
+                     transition-all duration-300 btn-press cursor-pointer"
+        >
+          <h2 className="font-[Cinzel] text-base text-text-secondary group-hover:text-gold-light transition-colors">
+            Game Stats
+          </h2>
+          <p className="text-text-muted text-xs mt-1">
+            Review pots, actions, player results &amp; AI reads
           </p>
         </button>
       </div>

@@ -72,18 +72,18 @@ export function ActionPanel({ player, round, players, onAction, disabled }: Acti
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-3"
+      className="relative"
     >
       {/* Raise Slider (shown when raise is selected) */}
       {showRaiseSlider && raiseAction && (
         <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          className="bg-noir-card border border-noir-border rounded-lg p-4"
+          initial={{ opacity: 0, y: 8, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          className="absolute left-0 right-0 bottom-[calc(100%+8px)] z-30 bg-noir-card/95 border border-gold-border/40 rounded-lg p-3 shadow-[0_18px_45px_rgba(0,0,0,0.7)] backdrop-blur"
         >
           {/* Amount display */}
-          <div className="text-center mb-3">
-            <span className="font-[DM_Mono] text-gold-light text-lg">
+          <div className="text-center mb-2">
+            <span className="font-[DM_Mono] text-gold-light text-base">
               {raiseAmount.toLocaleString()}
             </span>
           </div>
@@ -95,21 +95,21 @@ export function ActionPanel({ player, round, players, onAction, disabled }: Acti
             max={maxRaise}
             value={raiseAmount}
             onChange={(e) => setRaiseAmount(Number(e.target.value))}
-            className="w-full h-2 bg-noir-elevated rounded-full appearance-none cursor-pointer
-                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5
-                       [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:bg-gold-primary
+            className="w-full h-1.5 bg-noir-elevated rounded-full appearance-none cursor-pointer
+                       [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4
+                       [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:bg-gold-primary
                        [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:cursor-pointer
                        [&::-webkit-slider-thumb]:shadow-[0_0_8px_rgba(201,168,76,0.5)]"
           />
 
           {/* Preset buttons */}
-          <div className="flex gap-2 mt-3">
+          <div className="flex gap-1.5 mt-2">
             {potPresets.map(preset => (
               <button
                 key={preset.label}
                 onClick={() => setRaiseAmount(preset.amount)}
-                className="flex-1 py-1.5 bg-noir-elevated border border-noir-border rounded
-                           font-[DM_Mono] text-xs text-text-secondary
+                className="flex-1 py-1 bg-noir-elevated border border-noir-border rounded
+                           font-[DM_Mono] text-[10px] text-text-secondary
                            hover:border-gold-muted hover:text-gold-light transition-colors cursor-pointer"
               >
                 {preset.label}
@@ -117,8 +117,8 @@ export function ActionPanel({ player, round, players, onAction, disabled }: Acti
             ))}
             <button
               onClick={handleAllIn}
-              className="flex-1 py-1.5 bg-status-danger/20 border border-status-danger/30 rounded
-                         font-[DM_Mono] text-xs text-status-danger
+              className="flex-1 py-1 bg-status-danger/20 border border-status-danger/30 rounded
+                         font-[DM_Mono] text-[10px] text-status-danger
                          hover:bg-status-danger/30 transition-colors cursor-pointer"
             >
               All-In
