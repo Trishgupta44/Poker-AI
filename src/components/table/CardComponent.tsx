@@ -18,9 +18,9 @@ const RANK_DISPLAY: Record<string, string> = {
 };
 
 const sizes = {
-  sm: { width: 48, height: 68, rank: 11, suit: 9, centerSuit: 28, pad: 3 },
-  md: { width: 62, height: 86, rank: 15, suit: 12, centerSuit: 46, pad: 5 },
-  lg: { width: 80, height: 115, rank: 18, suit: 14, centerSuit: 58, pad: 6 },
+  sm: { width: 48, height: 68, rank: 11, suit: 9, centerSuit: 22, pad: 3 },
+  md: { width: 62, height: 86, rank: 15, suit: 12, centerSuit: 34, pad: 5 },
+  lg: { width: 80, height: 115, rank: 18, suit: 14, centerSuit: 46, pad: 6 },
 };
 
 export function CardComponent({ card, faceDown = false, size = 'md', delay = 0, animate = true }: CardComponentProps) {

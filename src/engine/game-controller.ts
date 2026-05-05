@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 import type { Card } from '../types/card';
-import type { Player, BotPersonality } from '../types/player';
+import type { Player } from '../types/player';
 import { createHumanPlayer, createBotPlayer, BOT_PERSONALITIES } from '../types/player';
 import type {
   GameState, GameConfig, RoundState, ActionType, Street,
@@ -11,8 +11,8 @@ import {
   applyAction, isBettingRoundComplete, getNextActivePlayerIndex,
   countActivePlayers, countActingPlayers, resetStreetBetting,
 } from './betting';
-import { resolveShowdown, type ShowdownResult } from './showdown';
-import { evaluateHand, getHandStrengthPercentile } from './hand-evaluator';
+import { resolveShowdown } from './showdown';
+import { getHandStrengthPercentile } from './hand-evaluator';
 
 // ─── Initialize Game ──────────────────────────────────────────────────────
 
@@ -150,9 +150,11 @@ export function processPlayerAction(
   }
 
   // Apply the action
-  let { round, players } = applyAction(
+  const actionResult = applyAction(
     state.currentRound, state.players, playerId, action, amount
   );
+  let round = actionResult.round;
+  const players = actionResult.players;
 
   // Check if only one player left (everyone else folded)
   const activeCount = countActivePlayers(players);
@@ -207,7 +209,7 @@ export function advanceStreet(state: GameState): GameState {
   }
 
   // Deal community cards for the new street
-  let updatedState = dealCommunityCards(state, nextStreet);
+  const updatedState = dealCommunityCards(state, nextStreet);
 
   // Reset betting for new street
   const { round: resetRound, players: resetPlayers } =
@@ -237,7 +239,7 @@ export function advanceStreet(state: GameState): GameState {
 export function goToShowdown(state: GameState): GameState {
   if (!state.currentRound) throw new Error('No active round');
 
-  const { currentRound: round, players, config } = state;
+  const { currentRound: round, players } = state;
 
   // Resolve the showdown
   const showdownResult = resolveShowdown(players, round.communityCards);

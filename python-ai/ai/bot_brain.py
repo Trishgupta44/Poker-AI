@@ -20,6 +20,7 @@ Bots intentionally create detectable bluff patterns:
 
 import random
 from .monte_carlo import calculate_hand_equity
+from .xgboost_decision import suggest_xgboost_action
 
 
 def decide_bot_action(
@@ -63,6 +64,7 @@ def decide_bot_action(
     can_call = to_call > 0 and chips >= to_call
     can_raise = chips > to_call + min_raise
     can_all_in = chips > 0 and chips <= to_call
+    legal_actions = _get_legal_actions(to_call, chips, can_check, can_call, can_raise, can_all_in)
 
     # ALL_IN shortcut (facing bet bigger than stack)
     if can_all_in and not can_call and not can_check:
@@ -77,6 +79,10 @@ def decide_bot_action(
         else:
             action, amount = "FOLD", 0
 
+        action, amount = _apply_xgboost_suggestion(
+            bot, round_state, all_players, equity, legal_actions,
+            action, amount, pot, aggressiveness, chips, min_raise, to_call,
+        )
         return {
             "action": action,
             "amount": int(amount),
@@ -100,6 +106,10 @@ def decide_bot_action(
             round_state,
         )
 
+    action, amount = _apply_xgboost_suggestion(
+        bot, round_state, all_players, equity, legal_actions,
+        action, amount, pot, aggressiveness, chips, min_raise, to_call,
+    )
     is_bluff = equity < 40 and action in ("RAISE", "ALL_IN")
     think_time = calculate_think_time(equity, action, aggressiveness, is_bluff)
 
@@ -267,6 +277,62 @@ def _calculate_bluff_raise(
     amount = max(amount, min_raise + to_call)
     amount = min(amount, chips)
     return int(round(amount))
+
+
+def _get_legal_actions(
+    to_call: float,
+    chips: float,
+    can_check: bool,
+    can_call: bool,
+    can_raise: bool,
+    can_all_in: bool,
+) -> list[str]:
+    actions = []
+    if to_call > 0:
+        actions.append("FOLD")
+    if can_check:
+        actions.append("CHECK")
+    if can_call:
+        actions.append("CALL")
+    if can_raise:
+        actions.append("RAISE")
+    if chips > 0 and (can_raise or can_all_in):
+        actions.append("ALL_IN")
+    return actions
+
+
+def _apply_xgboost_suggestion(
+    bot: dict,
+    round_state: dict,
+    all_players: list[dict],
+    equity: float,
+    legal_actions: list[str],
+    fallback_action: str,
+    fallback_amount: int,
+    pot: float,
+    aggressiveness: float,
+    chips: float,
+    min_raise: float,
+    to_call: float,
+) -> tuple[str, int]:
+    suggestion = suggest_xgboost_action(bot, round_state, all_players, equity, legal_actions)
+    if not suggestion or suggestion.get("confidence", 0) < 0.45:
+        return fallback_action, fallback_amount
+
+    action = suggestion["action"]
+    if action == "FOLD":
+        return "FOLD", 0
+    if action == "CHECK":
+        return "CHECK", 0
+    if action == "CALL":
+        return "CALL", int(min(to_call, chips))
+    if action == "ALL_IN":
+        return "ALL_IN", int(chips)
+    if action == "RAISE":
+        amount = _calculate_raise_amount(pot, aggressiveness, chips, min_raise, to_call)
+        return "RAISE", amount
+
+    return fallback_action, fallback_amount
 
 
 def calculate_think_time(equity: float, action: str, aggressiveness: float, is_bluff: bool = False) -> int:

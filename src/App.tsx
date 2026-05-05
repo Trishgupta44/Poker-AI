@@ -4,6 +4,7 @@ import { HomeScreen } from './components/screens/HomeScreen';
 import { SetupScreen } from './components/screens/SetupScreen';
 import { GameScreen } from './components/screens/GameScreen';
 import { InstructionsScreen } from './components/screens/InstructionsScreen';
+import { StatsScreen } from './components/screens/StatsScreen';
 
 // ── Error Boundary ──────────────────────────────────────────────────────────
 // Catches unhandled render errors so the page doesn't crash/reload.
@@ -77,6 +78,7 @@ function App() {
           <Route path="/setup" element={<SetupScreen />} />
           <Route path="/game" element={<GameScreen />} />
           <Route path="/instructions" element={<InstructionsScreen />} />
+          <Route path="/stats" element={<StatsScreen />} />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>

@@ -147,6 +147,35 @@ export interface ScareCardResult {
   affectsThem: boolean;
 }
 
+export interface TrainingStatsPoint {
+  label: string;
+  value: number;
+  labelled?: number;
+}
+
+export interface TrainingStatsRecentHand {
+  roundNumber: number;
+  potTotal: number;
+  actionCount: number;
+  examples: number;
+  labelled: number;
+  aggressiveActions: number;
+}
+
+export interface TrainingStatsResult {
+  dbPath: string;
+  hands: number;
+  actions: number;
+  trainingExamples: number;
+  labelledExamples: number;
+  labelCoverage: number;
+  actionDistribution: TrainingStatsPoint[];
+  tagDistribution: TrainingStatsPoint[];
+  streetDistribution: TrainingStatsPoint[];
+  learningCurve: TrainingStatsPoint[];
+  recentHands: TrainingStatsRecentHand[];
+}
+
 export function createDefaultProfile(subjectId: string, subjectName: string): OpponentProfile {
   return {
     subjectId,

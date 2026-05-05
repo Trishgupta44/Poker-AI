@@ -5,7 +5,7 @@
  * is handled by the Python server at http://127.0.0.1:8000.
  */
 
-import type { HandStrengthResult, ConfidenceResult, AuditResult, OpponentProfile, PreflopStrategyResult, DrawResult, BlockerResult, ScareCardResult } from '../types/ai';
+import type { HandStrengthResult, ConfidenceResult, AuditResult, OpponentProfile, PreflopStrategyResult, DrawResult, BlockerResult, ScareCardResult, TrainingStatsResult } from '../types/ai';
 import type { Card } from '../types/card';
 import type { PlayerAction, Street, RoundState } from '../types/game';
 import type { Player } from '../types/player';
@@ -25,12 +25,25 @@ async function apiPost<T>(endpoint: string, body: unknown): Promise<T> {
   return res.json();
 }
 
+async function apiGet<T>(endpoint: string): Promise<T> {
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    method: 'GET',
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!res.ok) throw new Error(`API error: ${res.status}`);
+  return res.json();
+}
+
 // ── Helper: Sanitize RoundState for API (convert Set → Array, strip secrets) ──
 
 function sanitizeRound(round: RoundState): Record<string, unknown> {
-  const { deck, burnCards, playersActedThisStreet, ...rest } = round;
+  const { playersActedThisStreet, ...rest } = round;
+  const safeRound: Record<string, unknown> = { ...rest };
+  delete safeRound.deck;
+  delete safeRound.burnCards;
+
   return {
-    ...rest,
+    ...safeRound,
     playersActedThisStreet: playersActedThisStreet
       ? Array.from(playersActedThisStreet)
       : [],
@@ -93,6 +106,10 @@ export async function auditRound(
     players,
     communityCards,
   });
+}
+
+export async function getTrainingStats(): Promise<TrainingStatsResult> {
+  return apiGet<TrainingStatsResult>('/api/training-stats');
 }
 
 export async function updateProfile(

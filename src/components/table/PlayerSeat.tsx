@@ -32,8 +32,8 @@ function ActionBadge({ action }: { action: ActionType }) {
   return (
     <span
       style={{
-        padding: '1px 6px',
-        borderRadius: 3,
+        padding: '2px 7px',
+        borderRadius: 999,
         background: cfg.bg,
         border: `1px solid ${cfg.bd}`,
         color: cfg.c,
@@ -68,8 +68,16 @@ export function PlayerSeat({ player, isActive, isDealer, showCards, position, la
       }}
       transition={{ duration: 0.3 }}
     >
+      {isActive && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.86 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="absolute -inset-x-4 top-[62px] h-16 rounded-full border border-gold-primary/25 bg-gold-primary/5 blur-[1px]"
+        />
+      )}
+
       {/* Cards */}
-      <div className="flex gap-0.5 mb-1">
+      <div className="relative z-10 flex gap-1 mb-0.5">
         {player.holeCards.length > 0 ? (
           player.holeCards.map((card, i) => (
             <CardComponent
@@ -87,10 +95,10 @@ export function PlayerSeat({ player, isActive, isDealer, showCards, position, la
 
       {/* Player Info Box */}
       <div
-        className={`relative rounded-lg px-3 py-1.5 min-w-[100px] text-center transition-all duration-300
+        className={`relative rounded-lg px-3 py-1.5 min-w-[108px] text-center transition-all duration-300
           ${isActive
-            ? 'bg-noir-elevated border-2 border-gold-primary shadow-[0_0_15px_rgba(201,168,76,0.3)]'
-            : 'bg-noir-card border border-noir-border'
+            ? 'bg-noir-elevated border border-gold-primary shadow-[0_0_22px_rgba(201,168,76,0.28)]'
+            : 'bg-noir-card/95 border border-noir-border shadow-[0_10px_28px_rgba(0,0,0,0.45)]'
           }
           ${isFolded ? 'border-noir-border/50' : ''}
         `}
@@ -115,9 +123,15 @@ export function PlayerSeat({ player, isActive, isDealer, showCards, position, la
         </div>
 
         {/* Chips */}
-        <div className={`font-[DM_Mono] text-xs ${isFolded ? 'text-text-muted' : 'text-gold-light'}`}>
+        <div className={`mt-0.5 font-[DM_Mono] text-xs ${isFolded ? 'text-text-muted' : 'text-gold-light'}`}>
           {player.chips.toLocaleString()}
         </div>
+
+        {isActive && !isFolded && (
+          <div className="mt-1 font-[DM_Mono] text-[9px] uppercase tracking-[0.16em] text-gold-primary">
+            Acting
+          </div>
+        )}
 
         {/* Status badges */}
         {isFolded && (
@@ -137,10 +151,10 @@ export function PlayerSeat({ player, isActive, isDealer, showCards, position, la
         <motion.div
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mt-1 bg-noir-bg/80 border border-gold-border/30 rounded-full px-2 py-0.5"
+          className="mt-0.5 bg-noir-bg/90 border border-gold-border/40 rounded-full px-3 py-1 shadow-[0_6px_14px_rgba(0,0,0,0.35)]"
         >
           <span className="font-[DM_Mono] text-[10px] text-gold-light">
-            {player.currentBet.toLocaleString()}
+            Bet {player.currentBet.toLocaleString()}
           </span>
         </motion.div>
       )}
