@@ -75,14 +75,10 @@ export function GameScreen() {
     // Only show handover when player changes or new round starts
     if (isNewRound || isDifferentPlayer) {
       lastHandoveredRef.current = { playerId: currentPlayer.id, roundNumber: roundNum };
-      const playerName = currentPlayer.name;
-      queueMicrotask(() => {
-        setHandoverReady(false);
-        setTurnHandoverPlayer(playerName);
-      });
+      setHandoverReady(false);
+      setTurnHandoverPlayer(currentPlayer.name);
     }
   }, [
-    gameState?.currentRound,
     gameState?.currentRound?.activePlayerIndex,
     gameState?.currentRound?.phase,
     gameState?.currentRound?.roundNumber,
@@ -169,11 +165,11 @@ export function GameScreen() {
   const showModal = showRevealModal || (isShowdownPhase && lastRound != null);
 
   return (
-    <div className="min-h-screen xl:h-screen flex flex-col xl:overflow-hidden"
+    <div className="h-screen flex flex-col overflow-hidden"
          style={{ background: 'radial-gradient(ellipse at center top, #1A1A1A 0%, #0A0A0A 50%)' }}>
 
       {/* Header */}
-      <header className="flex-shrink-0 flex items-center justify-between gap-3 px-4 py-2 border-b border-noir-border/50">
+      <header className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-noir-border/50">
         <button
           onClick={() => { resetGame(); navigate('/'); }}
           className="font-[DM_Mono] text-xs text-text-muted hover:text-text-primary transition-colors cursor-pointer"
@@ -183,58 +179,17 @@ export function GameScreen() {
         <div className="font-[Cinzel] text-sm text-gold-light tracking-wider">
           {gameState.config.mode === 'VS_BOTS' ? 'VS BOTS' : '2-PLAYER'}
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate('/stats')}
-            className="font-[DM_Mono] text-xs text-text-muted hover:text-gold-light transition-colors cursor-pointer"
-          >
-            Stats
-          </button>
-          <div className="font-[DM_Mono] text-xs text-text-muted">
-            Round {round?.roundNumber ?? 0}
-          </div>
+        <div className="font-[DM_Mono] text-xs text-text-muted">
+          Round {round?.roundNumber ?? 0}
         </div>
       </header>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col xl:flex-row min-h-0 gap-2 p-2">
+      <div className="flex-1 flex flex-row min-h-0 gap-2 p-2">
         {/* Table + Actions column */}
-        <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-visible rounded-2xl border border-white/[0.03] bg-black/10">
-          {/* Street indicator bar */}
-          {round && (
-            <div
-              className="flex justify-center gap-1 flex-shrink-0 flex-wrap"
-              style={{
-                padding: '5px 12px 2px',
-                background: 'rgba(0,0,0,.18)',
-              }}
-            >
-              {(['PREFLOP', 'FLOP', 'TURN', 'RIVER'] as const).map(s => {
-                const isActive = round.currentStreet === s;
-                return (
-                  <div
-                    key={s}
-                    style={{
-                      padding: '4px 12px',
-                      borderRadius: 999,
-                      background: isActive ? 'rgba(201,168,76,.11)' : 'rgba(255,255,255,.012)',
-                      border: `1px solid ${isActive ? 'rgba(201,168,76,.4)' : 'rgba(255,255,255,.045)'}`,
-                      color: isActive ? '#c9a84c' : 'rgba(255,255,255,.26)',
-                      fontSize: 7,
-                      letterSpacing: '.13em',
-                      fontFamily: "'DM Mono', monospace",
-                      transition: 'all .2s',
-                    }}
-                  >
-                    {s}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
+        <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-visible">
           {/* Poker Table — takes most of the vertical space */}
-          <div className="flex-1 flex items-center justify-center min-h-[500px] xl:min-h-0 overflow-visible px-2 py-4">
+          <div className="flex-1 flex items-center justify-center min-h-0 overflow-visible">
             {round && (
               <PokerTable
                 players={gameState.players}
@@ -249,8 +204,42 @@ export function GameScreen() {
             )}
           </div>
 
+          {/* Street indicator bar */}
+          {round && (
+            <div
+              className="flex justify-center gap-1.5 flex-shrink-0"
+              style={{
+                padding: '7px 20px',
+                borderTop: '1px solid rgba(255,255,255,.04)',
+                background: 'rgba(0,0,0,.35)',
+              }}
+            >
+              {(['PREFLOP', 'FLOP', 'TURN', 'RIVER'] as const).map(s => {
+                const isActive = round.currentStreet === s;
+                return (
+                  <div
+                    key={s}
+                    style={{
+                      padding: '6px 16px',
+                      borderRadius: 4,
+                      background: isActive ? 'rgba(201,168,76,.09)' : 'rgba(255,255,255,.015)',
+                      border: `1px solid ${isActive ? 'rgba(201,168,76,.38)' : 'rgba(255,255,255,.055)'}`,
+                      color: isActive ? '#c9a84c' : 'rgba(255,255,255,.28)',
+                      fontSize: 8,
+                      letterSpacing: '.13em',
+                      fontFamily: "'DM Mono', monospace",
+                      transition: 'all .2s',
+                    }}
+                  >
+                    {s}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
           {/* Action Panel — fixed at bottom */}
-          <div className="flex-shrink-0 max-w-xl mx-auto w-full px-2 pb-2 pt-1">
+          <div className="flex-shrink-0 max-w-md mx-auto w-full pb-2 pt-1">
             {isHumanTurn && currentPlayer && round && (
               <ActionPanel
                 player={currentPlayer}
@@ -272,7 +261,7 @@ export function GameScreen() {
         </div>
 
         {/* AI Advisor Panel (sidebar) */}
-        <div className="w-full xl:w-80 flex-shrink-0 xl:overflow-y-auto">
+        <div className="w-72 flex-shrink-0 overflow-y-auto">
           <AIAdvisorPanel visible={!!showAIPanel} />
         </div>
       </div>

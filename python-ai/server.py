@@ -35,7 +35,6 @@ from ai.preflop_strategy import get_preflop_strategy_action
 from ai.draw_detector import detect_draws
 from ai.blocker_detector import detect_blockers
 from ai.scare_card import detect_scare_cards
-from ai.training_store import get_training_stats, record_audited_round
 
 # ── App Setup ────────────────────────────────────────────────────────────────
 
@@ -206,19 +205,7 @@ async def audit_round_endpoint(req: AuditRoundRequest):
         players=req.players,
         community_cards=community,
     )
-    record_audited_round(
-        round_state=req.round,
-        players=req.players,
-        community_cards=community,
-        audit_results=results,
-    )
     return results
-
-
-@app.get("/api/training-stats")
-async def training_stats_endpoint():
-    """Read local SQLite training-data stats for the dashboard."""
-    return get_training_stats()
 
 
 @app.post("/api/update-profile")

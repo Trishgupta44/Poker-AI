@@ -30,9 +30,6 @@ __pycache__
 *.egg-info
 venv/
 .venv/
-.venv*/
-python-ai/data/*.sqlite
-python-ai/models/*.json
 
 # Claude Code local data
 .claude/

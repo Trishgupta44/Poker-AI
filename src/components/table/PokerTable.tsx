@@ -17,8 +17,7 @@ interface PokerTableProps {
 }
 
 function getSeatLayout(playerCount: number): Array<{ x: string; y: string }> {
-  // Original rail-style seating: cards sit around the oval rather than on top
-  // of the felt.
+  // Using the explicit left (x) and top (y) values to ensure the elements are properly centered
   const bottomCenter = { x: '45%', y: 'calc(85% + 20px)' };
   const topCenter    = { x: '45%', y: '-20%' };
   const leftCenter   = { x: '-6%',  y: '40%' };
@@ -59,19 +58,22 @@ export function PokerTable({
     }
   });
 
+  // Edge-based player seats positioning.
+  // The table visually occupies left: 8.5%, right: 91.5%, top: 15%, bottom: 85% of the container.
+
   return (
     <div className="relative w-full max-w-[800px] mx-auto overflow-visible" style={{ aspectRatio: '16/9' }}>
       {/* Ambient felt glow */}
       <div
         className="absolute pointer-events-none"
         style={{
-          width: '74%',
-          height: '62%',
-          left: '13%',
-          top: '19%',
+          width: '68%',
+          height: '58%',
+          left: '16%',
+          top: '21%',
           borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(20,105,55,.45) 0%, rgba(201,168,76,.09) 46%, transparent 74%)',
-          filter: 'blur(28px)',
+          background: 'radial-gradient(ellipse, rgba(15,65,28,.4) 0%, transparent 70%)',
+          filter: 'blur(24px)',
           animation: 'aGlow 4s ease-in-out infinite alternate',
         }}
       />
@@ -80,10 +82,10 @@ export function PokerTable({
       <div
         className="absolute"
         style={{
-          left: '10%',
-          top: '18%',
-          width: '80%',
-          height: '64%',
+          left: '8.5%',
+          top: '15%',
+          width: '83%',
+          height: '70%',
         }}
       >
         {/* Layer 1: Outer dark frame */}
@@ -91,8 +93,8 @@ export function PokerTable({
           style={{
             width: '100%',
             height: '100%',
-            borderRadius: 999,
-            background: 'linear-gradient(160deg, #21170a, #090909 54%, #1a1207)',
+            borderRadius: 120,
+            background: 'linear-gradient(160deg, #1a1a1a, #0d0d0d)',
             boxShadow: '0 22px 75px rgba(0,0,0,.88), inset 0 1px 0 rgba(255,255,255,.04)',
             padding: 7,
           }}
@@ -102,7 +104,7 @@ export function PokerTable({
             style={{
               width: '100%',
               height: '100%',
-              borderRadius: 999,
+              borderRadius: 120,
               padding: 3,
               background: 'conic-gradient(from 0deg, #c9a84c 0%, #7a5210 18%, #c9a84c 36%, #e8c86a 54%, #7a5210 72%, #c9a84c 100%)',
               boxShadow: 'inset 0 2px 6px rgba(0,0,0,.5)',
@@ -113,10 +115,10 @@ export function PokerTable({
               style={{
                 width: '100%',
                 height: '100%',
-                borderRadius: 999,
+                borderRadius: 120,
                 padding: 9,
-                background: 'radial-gradient(ellipse at 30% 25%, #3a2209, #140b03 68%)',
-                boxShadow: 'inset 0 6px 22px rgba(0,0,0,.68), inset 0 -2px 0 rgba(201,168,76,.1)',
+                background: 'radial-gradient(ellipse at 30% 25%, #271806, #130b03)',
+                boxShadow: 'inset 0 4px 18px rgba(0,0,0,.65)',
               }}
             >
               {/* Layer 4: Thin gold inner accent */}
@@ -124,8 +126,8 @@ export function PokerTable({
                 style={{
                   width: '100%',
                   height: '100%',
-                  borderRadius: 999,
-                  border: '1.5px solid rgba(201,168,76,.2)',
+                  borderRadius: 120,
+                  border: '1.5px solid rgba(201,168,76,.18)',
                   padding: 5,
                 }}
               >
@@ -134,11 +136,11 @@ export function PokerTable({
                   style={{
                     width: '100%',
                     height: '100%',
-                    borderRadius: 999,
-                    background: 'radial-gradient(ellipse at 42% 36%, #248144, #10502a 52%, #062713)',
+                    borderRadius: 120,
+                    background: 'radial-gradient(ellipse at 42% 36%, #1d6530, #11401e, #0a2c14)',
                     position: 'relative',
                     overflow: 'hidden',
-                    boxShadow: 'inset 0 5px 34px rgba(0,0,0,.52), inset 0 0 0 1px rgba(255,255,255,.035)',
+                    boxShadow: 'inset 0 3px 30px rgba(0,0,0,.45)',
                   }}
                 >
                   {/* Micro weave texture */}
@@ -146,18 +148,9 @@ export function PokerTable({
                     style={{
                       position: 'absolute',
                       inset: 0,
-                      borderRadius: 999,
+                      borderRadius: 120,
                       backgroundImage: `repeating-linear-gradient(0deg, rgba(0,0,0,.05) 0, rgba(0,0,0,.05) 1px, transparent 1px, transparent 3px),
                         repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0, rgba(0,0,0,.05) 1px, transparent 1px, transparent 3px)`,
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: '14%',
-                      borderRadius: 999,
-                      border: '1px solid rgba(232,213,163,.13)',
-                      boxShadow: 'inset 0 0 24px rgba(0,0,0,.18)',
                     }}
                   />
 

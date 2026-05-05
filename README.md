@@ -9,9 +9,6 @@ A Texas Hold'em poker game powered by a **neurosymbolic AI advisor** that combin
 ### AI & Machine Learning
 - **Monte Carlo Hand Equity** — 1,000-iteration simulation calculates your win probability on every street using the Treys poker evaluation library
 - **12-Feature Naive Bayes Bluff Detection** — Classifies opponent actions as bluff or value using bet sizing, street, board texture, position, action sequences, SPR, recency, action speed, polarization, donk bets, range narrowing, and narrative consistency
-- **Auto-Trained XGBoost Bot Decisions** — Bots can load an XGBoost decision model trained automatically from shared seed data plus local training history, with heuristic fallback if the model or dependency is unavailable
-- **SQLite Training Store** — Completed audited hands are saved locally as hands, actions, player results, and model-ready training examples
-- **AI Learning Dashboard** — `/stats` focuses on model readiness, dataset size, label coverage, street coverage, target balance, opponent memory, and exploitability signals
 - **Opponent Profiling** — 40+ conditional probabilities tracked per opponent with Exponential Moving Average (EMA, decay = 0.92) updates after every showdown
 - **Confidence Score** — Bayesian posterior probability (0–100) indicating how likely an opponent holds a strong hand, with 5-tier labels from "Almost certainly bluffing" to "Strong hand"
 - **Post-Round Audit** — Classifies revealed hands as BLUFF, VALUE_BET, SLOW_PLAY, or PASSIVE using ground-truth hole cards, then updates opponent profiles
@@ -20,12 +17,6 @@ A Texas Hold'em poker game powered by a **neurosymbolic AI advisor** that combin
 - **Blocker Detection** — Analyzes hero's hole cards for nut flush blockers, top pair blockers, set blockers, and straight blockers
 - **Scare Card Detection** — Flags new community cards as SAFE, MILD, SCARY, or VERY_SCARY based on flush/straight completion and board pairing
 - **Preflop Strategy** — Position-based hand tier system (Tier 1–6) recommending RAISE, CALL, or FOLD based on seat and hand strength
-
-### Training Data & Model Lifecycle
-- **Seed Dataset** — `python-ai/ai/brain.json` is committed as shared training data so new users start with useful examples
-- **Local Growth** — New hands are appended to a local SQLite database at `python-ai/data/poker_training.sqlite`
-- **Automatic Export** — When a bot needs an XGBoost suggestion, the backend creates or refreshes `python-ai/models/bot_decision.json` if the model is missing or stale
-- **Safe Fallback** — If XGBoost is not installed or training fails, bots continue using the personality/equity heuristic logic
 
 ### Gameplay
 - **3 Bot Personalities** — Viktor (tight, honest), Luna (aggressive bluffer), Rex (passive, sneaky)
@@ -41,7 +32,6 @@ A Texas Hold'em poker game powered by a **neurosymbolic AI advisor** that combin
 - **Bluff Likelihood Gauge** — Inverted confidence score as semicircular arc showing opponent bluff probability
 - **Confidence Cards** — Per-opponent breakdown with ⚠ (favours bluff) and ✔ (favours value) symbols for each of the 12 features
 - **AI Move Recommendation** — FOLD / CHECK / CALL / RAISE with confidence percentage and reasoning
-- **Stats Dashboard** — AI-focused graphs for model readiness, label quality, target balance, street coverage, and opponent exploitability signals
 
 ---
 
@@ -158,7 +148,6 @@ Profiles improve over time as the system observes more showdowns, making bluff d
 | Animation | CSS Keyframes + Framer Motion |
 | AI Backend | Python 3.10+, FastAPI, Uvicorn |
 | Hand Evaluation | pokersolver (JS) + Treys (Python) |
-| ML Training | XGBoost + local SQLite training data |
 | Audio | Web Audio API (synthesized sounds) |
 
 ---
@@ -171,25 +160,21 @@ poker-ai/
 │   ├── components/
 │   │   ├── ai-panel/        # AI advisor gauges, confidence cards, recommendations
 │   │   ├── table/           # Poker table, player seats, card components
-│   │   ├── screens/         # Home, Setup, Game, Stats, Instructions screens
+│   │   ├── screens/         # Home, Setup, Game, Instructions screens
 │   │   └── modals/          # Turn handover, reveal, game over modals
 │   ├── engine/              # Game controller, betting, deck, showdown, pot
 │   ├── hooks/               # useAIScoring, useBotActions, useSound
 │   ├── store/               # Zustand stores (game, AI, profiles)
 │   ├── api/                 # Frontend → Python API bridge
 │   ├── types/               # TypeScript type definitions
-│   ├── utils/               # Derived stats and dashboard helpers
 │   ├── audio/               # Sound effect synthesizer
 │   └── styles/              # Global CSS with animations
 ├── python-ai/
 │   ├── server.py            # FastAPI server (port 8000)
 │   ├── ai/
-│   │   ├── brain.json            # Shared seed training dataset
 │   │   ├── confidence_score.py   # 12-feature Naive Bayes classifier
 │   │   ├── monte_carlo.py        # Hand equity simulation
 │   │   ├── bot_brain.py          # Bot personality-driven decisions
-│   │   ├── xgboost_decision.py   # Auto-trained XGBoost decision adapter
-│   │   ├── training_store.py     # Local SQLite training data store
 │   │   ├── post_round_audit.py   # Showdown hand classification
 │   │   ├── board_texture.py      # DRY/WET/PAIRED classification
 │   │   ├── preflop_strategy.py   # Position-based hand tiers
@@ -198,8 +183,6 @@ poker-ai/
 │   │   ├── scare_card.py         # Scare card evaluation
 │   │   └── hand_evaluator.py     # Treys hand evaluation wrapper
 │   ├── tests/               # Python unit tests
-│   ├── data/                # Local SQLite DB (generated, ignored)
-│   ├── models/              # XGBoost model export (generated, ignored)
 │   └── requirements.txt     # Python dependencies
 ├── package.json
 ├── vite.config.ts
@@ -259,44 +242,6 @@ This starts Vite on **http://localhost:5173**. Open this URL in your browser.
 
 ---
 
-## AI Learning & XGBoost
-
-The project uses two layers of learning:
-
-1. **Online opponent profiling** updates localStorage profiles while you play.
-2. **Model training data** is saved by the Python backend for XGBoost.
-
-The shared seed dataset lives at:
-
-```text
-python-ai/ai/brain.json
-```
-
-When the Python backend audits a round, it also records local training data in:
-
-```text
-python-ai/data/poker_training.sqlite
-```
-
-That SQLite file is generated locally and ignored by git. The committed `brain.json` file is the portable seed dataset for other users.
-
-When a bot asks for an XGBoost decision, `python-ai/ai/xgboost_decision.py` automatically:
-
-1. Loads examples from `brain.json`.
-2. Adds local SQLite examples if they exist.
-3. Trains or refreshes `python-ai/models/bot_decision.json` when the model is missing or stale.
-4. Returns an action suggestion when possible.
-5. Falls back to the heuristic bot brain if XGBoost/model training is unavailable.
-
-Optional environment variables:
-
-```bash
-POKER_AI_TRAINING_DB=/path/to/poker_training.sqlite
-POKER_AI_XGBOOST_MODEL=/path/to/bot_decision.json
-```
-
----
-
 ## How to Play
 
 1. Open **http://localhost:5173** in your browser
@@ -308,7 +253,6 @@ POKER_AI_XGBOOST_MODEL=/path/to/bot_decision.json
    - **Move Recommendation** — suggested action with confidence and reasoning
    - **Opponent Analysis** — per-opponent confidence cards with 12-feature breakdowns
 5. Play rounds — the AI learns opponent patterns over time, even from rounds where you fold early
-6. Open **Game Stats** to view the AI learning dashboard: model readiness, label coverage, target balance, street coverage, opponent model maturity, and exploitability signals
 
 ---
 
@@ -328,7 +272,6 @@ The Python backend exposes these FastAPI endpoints on `http://localhost:8000`:
 | `POST /api/detect-draws` | Flush/straight draw detection |
 | `POST /api/detect-blockers` | Card blocker analysis |
 | `POST /api/detect-scare-cards` | Scare card evaluation |
-| `GET /api/training-stats` | SQLite training dataset and AI learning dashboard stats |
 
 ---
 
@@ -336,8 +279,6 @@ The Python backend exposes these FastAPI endpoints on `http://localhost:8000`:
 
 - **AI panel shows "Waiting..."** — Make sure the Python server is running on port 8000
 - **No opponent analysis data** — Play at least 1 full round to showdown. Profiles build from ALL rounds including when you fold
-- **Stats page shows no training data** — Keep the Python backend running and complete/audit at least one round
-- **XGBoost model does not appear** — Install backend requirements with `pip install -r requirements.txt`; the model is generated lazily when bots request decisions
 - **Port 8000 already in use** — Kill the existing process or change the port in `python-ai/server.py`
 - **Python import errors** — Make sure you ran `pip install -r requirements.txt` from the `python-ai/` directory
 - **Bot actions timeout** — The Python server has a 10-second timeout; ensure it's running and responsive
