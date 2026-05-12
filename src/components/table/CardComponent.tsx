@@ -37,23 +37,33 @@ export function CardComponent({ card, faceDown = false, size = 'md', delay = 0, 
           width: s.width,
           height: s.height,
           borderRadius: 7,
-          background: 'linear-gradient(150deg, #1b2a4e 0%, #0e1828 100%)',
-          border: '1.5px solid rgba(201,168,76,.28)',
-          boxShadow: '0 5px 18px rgba(0,0,0,.65), inset 0 1px 0 rgba(201,168,76,.1)',
+          background: 'linear-gradient(160deg, #2f3f62 0%, #1a2437 56%, #0f1624 100%)',
+          border: '1.5px solid rgba(223,191,121,.48)',
+          boxShadow: '0 6px 18px rgba(0,0,0,.68), inset 0 1px 0 rgba(226,236,255,.2)',
           position: 'relative',
           overflow: 'hidden',
           animation: animate ? `cDeal .28s cubic-bezier(.34,1.56,.64,1) ${delay}s both` : undefined,
         }}
       >
+        {/* Vintage back frame */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 4,
+            borderRadius: 4,
+            border: '1px solid rgba(241,214,165,.34)',
+            boxShadow: 'inset 0 0 0 1px rgba(24,31,47,.55)',
+          }}
+        />
         {/* Crosshatch pattern */}
         <div
           style={{
             position: 'absolute',
-            inset: 5,
+            inset: 7,
             borderRadius: 4,
-            backgroundImage: `repeating-linear-gradient(45deg, rgba(201,168,76,.065) 0, rgba(201,168,76,.065) 1px, transparent 1px, transparent 8px),
-              repeating-linear-gradient(-45deg, rgba(201,168,76,.065) 0, rgba(201,168,76,.065) 1px, transparent 1px, transparent 8px)`,
-            border: '1px solid rgba(201,168,76,.09)',
+            backgroundImage: `repeating-linear-gradient(45deg, rgba(220,198,154,.08) 0, rgba(220,198,154,.08) 1px, transparent 1px, transparent 7px),
+              repeating-linear-gradient(-45deg, rgba(220,198,154,.06) 0, rgba(220,198,154,.06) 1px, transparent 1px, transparent 7px)`,
+            border: '1px solid rgba(220,198,154,.2)',
           }}
         />
         {/* Center diamond */}
@@ -65,7 +75,7 @@ export function CardComponent({ card, faceDown = false, size = 'md', delay = 0, 
             alignItems: 'center',
             justifyContent: 'center',
             fontSize: 22,
-            color: 'rgba(201,168,76,.1)',
+            color: 'rgba(240,219,180,.18)',
           }}
         >
           ♦
@@ -78,7 +88,7 @@ export function CardComponent({ card, faceDown = false, size = 'md', delay = 0, 
   const isRed = isRedSuit(card.suit);
   const suitSymbol = SUIT_SYMBOLS[card.suit];
   const rankDisplay = RANK_DISPLAY[card.rank] ?? card.rank;
-  const col = isRed ? '#b91c1c' : '#1e1b4b';
+  const col = isRed ? '#871a2b' : '#171c29';
 
   return (
     <motion.div
@@ -88,9 +98,12 @@ export function CardComponent({ card, faceDown = false, size = 'md', delay = 0, 
         width: s.width,
         height: s.height,
         borderRadius: 7,
-        background: 'linear-gradient(165deg, #fffef8 0%, #f2e8cc 100%)',
-        border: '1px solid rgba(0,0,0,.14)',
-        boxShadow: '0 7px 22px rgba(0,0,0,.6), 0 2px 5px rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.95)',
+        background: `
+          radial-gradient(circle at 18% 14%, rgba(255,255,255,.82), transparent 34%),
+          linear-gradient(165deg, #f6f7fb 0%, #dee4ef 100%)
+        `,
+        border: '1px solid rgba(43,49,67,.36)',
+        boxShadow: '0 7px 22px rgba(0,0,0,.6), 0 2px 5px rgba(0,0,0,.2), inset 0 1px 0 rgba(251,252,255,.92)',
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
@@ -99,6 +112,15 @@ export function CardComponent({ card, faceDown = false, size = 'md', delay = 0, 
         animation: animate ? `cDeal .3s cubic-bezier(.34,1.56,.64,1) ${delay}s both` : undefined,
       }}
     >
+      <div
+        style={{
+          position: 'absolute',
+          inset: 2,
+          borderRadius: 5,
+          border: '1px solid rgba(76,90,124,.24)',
+          pointerEvents: 'none',
+        }}
+      />
       {/* Top-left corner */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', lineHeight: 1, color: col }}>
         <span
@@ -107,6 +129,7 @@ export function CardComponent({ card, faceDown = false, size = 'md', delay = 0, 
             fontWeight: 800,
             fontFamily: "'Cinzel', serif",
             lineHeight: 1,
+            textShadow: '0 1px 0 rgba(255,255,255,.35)',
           }}
         >
           {rankDisplay}
@@ -131,7 +154,8 @@ export function CardComponent({ card, faceDown = false, size = 'md', delay = 0, 
           style={{
             fontSize: s.centerSuit,
             color: col,
-            filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.1))',
+            filter: 'drop-shadow(0 1px 1px rgba(0,0,0,.2))',
+            opacity: 0.96,
           }}
         >
           {suitSymbol}
@@ -155,6 +179,7 @@ export function CardComponent({ card, faceDown = false, size = 'md', delay = 0, 
             fontWeight: 800,
             fontFamily: "'Cinzel', serif",
             lineHeight: 1,
+            textShadow: '0 1px 0 rgba(255,255,255,.35)',
           }}
         >
           {rankDisplay}

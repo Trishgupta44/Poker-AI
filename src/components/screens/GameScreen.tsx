@@ -170,7 +170,14 @@ export function GameScreen() {
 
   return (
     <div className="min-h-screen xl:h-screen flex flex-col xl:overflow-hidden"
-         style={{ background: 'radial-gradient(ellipse at center top, #1A1A1A 0%, #0A0A0A 50%)' }}>
+         style={{
+           background: `
+             radial-gradient(ellipse at 50% 7%, rgba(226,193,124,.18) 0%, rgba(226,193,124,.06) 24%, transparent 52%),
+             radial-gradient(ellipse at 18% 18%, rgba(63,86,140,.14) 0%, transparent 36%),
+             radial-gradient(ellipse at 82% 14%, rgba(90,110,155,.1) 0%, transparent 34%),
+             radial-gradient(ellipse at center, #1b2230 0%, #111722 46%, #0a0f17 74%, #070b12 100%)
+           `,
+         }}>
 
       {/* Header */}
       <header className="flex-shrink-0 flex items-center justify-between gap-3 px-4 py-2 border-b border-noir-border/50">
@@ -234,7 +241,14 @@ export function GameScreen() {
           )}
 
           {/* Poker Table — takes most of the vertical space */}
-          <div className="flex-1 flex items-center justify-center min-h-[500px] xl:min-h-0 overflow-visible px-2 py-4">
+          <div className="relative flex-1 flex items-center justify-center min-h-[500px] xl:min-h-0 overflow-visible px-2 py-4">
+            {!isHumanTurn && round?.phase === 'BETTING' && (
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 z-20">
+                <span className="inline-flex items-center rounded-full border border-gold-border/40 bg-noir-bg/85 px-3 py-1 font-[DM_Mono] text-[11px] tracking-[0.08em] text-gold-light shadow-[0_8px_20px_rgba(0,0,0,0.45)] animate-pulse">
+                  {currentPlayer?.name ?? 'Bot'} is thinking...
+                </span>
+              </div>
+            )}
             {round && (
               <PokerTable
                 players={gameState.players}
@@ -261,13 +275,6 @@ export function GameScreen() {
               />
             )}
 
-            {!isHumanTurn && round?.phase === 'BETTING' && (
-              <div className="text-center py-3">
-                <span className="font-[DM_Mono] text-text-muted text-sm animate-pulse">
-                  {currentPlayer?.name ?? 'Bot'} is thinking...
-                </span>
-              </div>
-            )}
           </div>
         </div>
 

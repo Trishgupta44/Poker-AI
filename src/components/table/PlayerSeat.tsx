@@ -53,6 +53,23 @@ function ActionBadge({ action }: { action: ActionType }) {
 export function PlayerSeat({ player, isActive, isDealer, showCards, position, lastAction }: PlayerSeatProps) {
   const isFolded = player.isFolded;
   const isAllIn = player.isAllIn;
+  const seatX = Number.parseFloat(position.x);
+  const seatY = Number.parseFloat(position.y);
+
+  let betPlacement: 'left' | 'right' | 'top' | 'bottom' = 'right';
+  if (Number.isFinite(seatY) && seatY <= 20) {
+    // Top seat: push bet upward (away from table center).
+    betPlacement = 'top';
+  } else if (Number.isFinite(seatX) && seatX <= 20) {
+    // Left rail seat: push bet outward to the left.
+    betPlacement = 'left';
+  } else if (Number.isFinite(seatX) && seatX >= 80) {
+    // Right rail seat: push bet outward to the right.
+    betPlacement = 'right';
+  } else if (Number.isFinite(seatY) && seatY >= 70) {
+    // Bottom seat: place below the info box.
+    betPlacement = 'bottom';
+  }
 
   return (
     <motion.div
@@ -144,20 +161,32 @@ export function PlayerSeat({ player, isActive, isDealer, showCards, position, la
             ALL IN
           </div>
         )}
-      </div>
 
-      {/* Current bet */}
-      {player.currentBet > 0 && !isFolded && (
-        <motion.div
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-0.5 bg-noir-bg/90 border border-gold-border/40 rounded-full px-3 py-1 shadow-[0_6px_14px_rgba(0,0,0,0.35)]"
-        >
-          <span className="font-[DM_Mono] text-[10px] text-gold-light">
-            Bet {player.currentBet.toLocaleString()}
-          </span>
-        </motion.div>
-      )}
+        {/* Current bet */}
+        {player.currentBet > 0 && !isFolded && (
+          <motion.div
+            initial={{
+              opacity: 0,
+              x: betPlacement === 'left' ? 6 : betPlacement === 'right' ? -6 : 0,
+              y: betPlacement === 'top' ? 6 : betPlacement === 'bottom' ? -6 : 0,
+            }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            className={`absolute bg-noir-bg/90 border border-gold-border/45 rounded-full px-3 py-1 shadow-[0_6px_14px_rgba(0,0,0,0.35)] ${
+              betPlacement === 'left'
+                ? 'top-1/2 -translate-y-1/2 right-[calc(100%+10px)]'
+                : betPlacement === 'right'
+                  ? 'top-1/2 -translate-y-1/2 left-[calc(100%+10px)]'
+                  : betPlacement === 'top'
+                    ? 'left-1/2 -translate-x-1/2 bottom-[calc(100%+8px)]'
+                    : 'left-1/2 -translate-x-1/2 top-[calc(100%+8px)]'
+            }`}
+          >
+            <span className="font-[DM_Mono] text-[10px] text-gold-light whitespace-nowrap">
+              Bet {player.currentBet.toLocaleString()}
+            </span>
+          </motion.div>
+        )}
+      </div>
     </motion.div>
   );
 }

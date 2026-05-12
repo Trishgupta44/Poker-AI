@@ -25683,5 +25683,760 @@
     "handStrengthPercentile": 95.8,
     "betSizeRatio": 0.75,
     "street": "RIVER"
+  },
+  {
+    "timestamp": 1778096808.411191,
+    "playerId": "Py8NrSx3MYLsRErOp3Fmk",
+    "playerName": "You",
+    "holeCards": [
+      {
+        "rank": "3",
+        "suit": "d"
+      },
+      {
+        "rank": "2",
+        "suit": "d"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "5",
+        "suit": "d"
+      },
+      {
+        "rank": "Q",
+        "suit": "s"
+      },
+      {
+        "rank": "9",
+        "suit": "s"
+      },
+      {
+        "rank": "9",
+        "suit": "c"
+      },
+      {
+        "rank": "Q",
+        "suit": "h"
+      }
+    ],
+    "tag": "PASSIVE",
+    "handStrengthPercentile": 63.1,
+    "betSizeRatio": 0.01,
+    "street": "RIVER"
+  },
+  {
+    "timestamp": 1778096808.411191,
+    "playerId": "TmqXwv9IjV9S_DToCi1_X",
+    "playerName": "Viktor",
+    "holeCards": [
+      {
+        "rank": "9",
+        "suit": "h"
+      },
+      {
+        "rank": "K",
+        "suit": "d"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "5",
+        "suit": "d"
+      },
+      {
+        "rank": "Q",
+        "suit": "s"
+      },
+      {
+        "rank": "9",
+        "suit": "s"
+      },
+      {
+        "rank": "9",
+        "suit": "c"
+      },
+      {
+        "rank": "Q",
+        "suit": "h"
+      }
+    ],
+    "tag": "VALUE_BET",
+    "handStrengthPercentile": 96.9,
+    "betSizeRatio": 0.59,
+    "street": "RIVER"
+  },
+  {
+    "timestamp": 1778096808.411191,
+    "playerId": "hQ9SmkpJKMPxav9I3fnxG",
+    "playerName": "Rex",
+    "holeCards": [
+      {
+        "rank": "Q",
+        "suit": "d"
+      },
+      {
+        "rank": "8",
+        "suit": "c"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "5",
+        "suit": "d"
+      },
+      {
+        "rank": "Q",
+        "suit": "s"
+      },
+      {
+        "rank": "9",
+        "suit": "s"
+      },
+      {
+        "rank": "9",
+        "suit": "c"
+      },
+      {
+        "rank": "Q",
+        "suit": "h"
+      }
+    ],
+    "tag": "VALUE_BET",
+    "handStrengthPercentile": 97.4,
+    "betSizeRatio": 0.49,
+    "street": "RIVER"
+  },
+  {
+    "timestamp": 1778096913.756609,
+    "playerId": "hQ9SmkpJKMPxav9I3fnxG",
+    "playerName": "Rex",
+    "holeCards": [
+      {
+        "rank": "T",
+        "suit": "c"
+      },
+      {
+        "rank": "T",
+        "suit": "h"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "8",
+        "suit": "c"
+      },
+      {
+        "rank": "2",
+        "suit": "h"
+      },
+      {
+        "rank": "3",
+        "suit": "s"
+      },
+      {
+        "rank": "6",
+        "suit": "s"
+      },
+      {
+        "rank": "T",
+        "suit": "s"
+      }
+    ],
+    "tag": "VALUE_BET",
+    "handStrengthPercentile": 74.3,
+    "betSizeRatio": 0.67,
+    "street": "PREFLOP"
+  },
+  {
+    "timestamp": 1778097424.669003,
+    "playerId": "WQZoMPRUfNcu82mC9KEAb",
+    "playerName": "Viktor",
+    "holeCards": [
+      {
+        "rank": "3",
+        "suit": "c"
+      },
+      {
+        "rank": "9",
+        "suit": "c"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "3",
+        "suit": "d"
+      },
+      {
+        "rank": "T",
+        "suit": "h"
+      },
+      {
+        "rank": "5",
+        "suit": "c"
+      }
+    ],
+    "tag": "BLUFF",
+    "handStrengthPercentile": 20.8,
+    "betSizeRatio": 0.82,
+    "street": "FLOP"
+  },
+  {
+    "timestamp": 1778097701.038819,
+    "playerId": "xFZNCPq5PNIVY8Uf0oJy-",
+    "playerName": "Luna",
+    "holeCards": [
+      {
+        "rank": "Q",
+        "suit": "s"
+      },
+      {
+        "rank": "5",
+        "suit": "s"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "3",
+        "suit": "s"
+      },
+      {
+        "rank": "6",
+        "suit": "h"
+      },
+      {
+        "rank": "A",
+        "suit": "d"
+      },
+      {
+        "rank": "J",
+        "suit": "s"
+      },
+      {
+        "rank": "8",
+        "suit": "d"
+      }
+    ],
+    "tag": "BLUFF",
+    "handStrengthPercentile": 14.7,
+    "betSizeRatio": 1.6,
+    "street": "TURN"
+  },
+  {
+    "timestamp": 1778097878.233647,
+    "playerId": "y4lculuT6di0T5i9fU21p",
+    "playerName": "Rex",
+    "holeCards": [
+      {
+        "rank": "T",
+        "suit": "h"
+      },
+      {
+        "rank": "5",
+        "suit": "h"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "5",
+        "suit": "s"
+      },
+      {
+        "rank": "4",
+        "suit": "c"
+      },
+      {
+        "rank": "K",
+        "suit": "c"
+      },
+      {
+        "rank": "J",
+        "suit": "s"
+      },
+      {
+        "rank": "8",
+        "suit": "d"
+      }
+    ],
+    "tag": "BLUFF",
+    "handStrengthPercentile": 28.0,
+    "betSizeRatio": 0.49,
+    "street": "TURN"
+  },
+  {
+    "timestamp": 1778097963.706885,
+    "playerId": "xFZNCPq5PNIVY8Uf0oJy-",
+    "playerName": "Luna",
+    "holeCards": [
+      {
+        "rank": "9",
+        "suit": "s"
+      },
+      {
+        "rank": "J",
+        "suit": "c"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "8",
+        "suit": "h"
+      },
+      {
+        "rank": "4",
+        "suit": "s"
+      },
+      {
+        "rank": "2",
+        "suit": "c"
+      }
+    ],
+    "tag": "BLUFF",
+    "handStrengthPercentile": 2.4,
+    "betSizeRatio": 1.78,
+    "street": "FLOP"
+  },
+  {
+    "timestamp": 1778097985.1153002,
+    "playerId": "xFZNCPq5PNIVY8Uf0oJy-",
+    "playerName": "Luna",
+    "holeCards": [
+      {
+        "rank": "3",
+        "suit": "c"
+      },
+      {
+        "rank": "3",
+        "suit": "h"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "J",
+        "suit": "d"
+      },
+      {
+        "rank": "3",
+        "suit": "s"
+      },
+      {
+        "rank": "K",
+        "suit": "h"
+      },
+      {
+        "rank": "2",
+        "suit": "s"
+      },
+      {
+        "rank": "2",
+        "suit": "h"
+      }
+    ],
+    "tag": "VALUE_BET",
+    "handStrengthPercentile": 95.8,
+    "betSizeRatio": 0.94,
+    "street": "TURN"
+  },
+  {
+    "timestamp": 1778098062.523157,
+    "playerId": "xFZNCPq5PNIVY8Uf0oJy-",
+    "playerName": "Luna",
+    "holeCards": [
+      {
+        "rank": "5",
+        "suit": "h"
+      },
+      {
+        "rank": "Q",
+        "suit": "c"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "6",
+        "suit": "c"
+      },
+      {
+        "rank": "T",
+        "suit": "h"
+      },
+      {
+        "rank": "8",
+        "suit": "s"
+      }
+    ],
+    "tag": "BLUFF",
+    "handStrengthPercentile": 4.6,
+    "betSizeRatio": 1.66,
+    "street": "FLOP"
+  },
+  {
+    "timestamp": 1778098143.5315042,
+    "playerId": "aOrLO-fz5hQBB30eozgsh",
+    "playerName": "You",
+    "holeCards": [
+      {
+        "rank": "3",
+        "suit": "s"
+      },
+      {
+        "rank": "J",
+        "suit": "c"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "8",
+        "suit": "h"
+      },
+      {
+        "rank": "Q",
+        "suit": "d"
+      },
+      {
+        "rank": "7",
+        "suit": "d"
+      },
+      {
+        "rank": "4",
+        "suit": "s"
+      },
+      {
+        "rank": "7",
+        "suit": "s"
+      }
+    ],
+    "tag": "PASSIVE",
+    "handStrengthPercentile": 33.4,
+    "betSizeRatio": 0.12,
+    "street": "TURN"
+  },
+  {
+    "timestamp": 1778098168.6555488,
+    "playerId": "JqVbMRWRtYyyf7ZdhBJLs",
+    "playerName": "Luna",
+    "holeCards": [
+      {
+        "rank": "Q",
+        "suit": "h"
+      },
+      {
+        "rank": "Q",
+        "suit": "c"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "Q",
+        "suit": "d"
+      },
+      {
+        "rank": "T",
+        "suit": "h"
+      },
+      {
+        "rank": "4",
+        "suit": "c"
+      },
+      {
+        "rank": "K",
+        "suit": "d"
+      },
+      {
+        "rank": "A",
+        "suit": "h"
+      }
+    ],
+    "tag": "VALUE_BET",
+    "handStrengthPercentile": 76.7,
+    "betSizeRatio": 0.96,
+    "street": "TURN"
+  },
+  {
+    "timestamp": 1778098168.6555488,
+    "playerId": "w8vBOm8uSiWD3sErXQWad",
+    "playerName": "Rex",
+    "holeCards": [
+      {
+        "rank": "K",
+        "suit": "c"
+      },
+      {
+        "rank": "A",
+        "suit": "c"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "Q",
+        "suit": "d"
+      },
+      {
+        "rank": "T",
+        "suit": "h"
+      },
+      {
+        "rank": "4",
+        "suit": "c"
+      },
+      {
+        "rank": "K",
+        "suit": "d"
+      },
+      {
+        "rank": "A",
+        "suit": "h"
+      }
+    ],
+    "tag": "PASSIVE",
+    "handStrengthPercentile": 66.9,
+    "betSizeRatio": 0.16,
+    "street": "TURN"
+  },
+  {
+    "timestamp": 1778098477.3469388,
+    "playerId": "JqVbMRWRtYyyf7ZdhBJLs",
+    "playerName": "Luna",
+    "holeCards": [
+      {
+        "rank": "K",
+        "suit": "h"
+      },
+      {
+        "rank": "K",
+        "suit": "s"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "K",
+        "suit": "d"
+      },
+      {
+        "rank": "5",
+        "suit": "d"
+      },
+      {
+        "rank": "5",
+        "suit": "h"
+      },
+      {
+        "rank": "9",
+        "suit": "s"
+      },
+      {
+        "rank": "8",
+        "suit": "h"
+      }
+    ],
+    "tag": "VALUE_BET",
+    "handStrengthPercentile": 97.5,
+    "betSizeRatio": 0.89,
+    "street": "TURN"
+  },
+  {
+    "timestamp": 1778098529.69212,
+    "playerId": "B8BvgfZZU3cMyhKxXb8Tl",
+    "playerName": "You",
+    "holeCards": [
+      {
+        "rank": "9",
+        "suit": "d"
+      },
+      {
+        "rank": "4",
+        "suit": "s"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "5",
+        "suit": "c"
+      },
+      {
+        "rank": "K",
+        "suit": "d"
+      },
+      {
+        "rank": "8",
+        "suit": "h"
+      },
+      {
+        "rank": "3",
+        "suit": "d"
+      },
+      {
+        "rank": "6",
+        "suit": "h"
+      }
+    ],
+    "tag": "BLUFF",
+    "handStrengthPercentile": 7.0,
+    "betSizeRatio": 33.33,
+    "street": "PREFLOP"
+  },
+  {
+    "timestamp": 1778125982.276958,
+    "playerId": "IuhlMBEBDFByLcCXSjGuj",
+    "playerName": "Luna",
+    "holeCards": [
+      {
+        "rank": "9",
+        "suit": "c"
+      },
+      {
+        "rank": "T",
+        "suit": "h"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "4",
+        "suit": "c"
+      },
+      {
+        "rank": "Q",
+        "suit": "s"
+      },
+      {
+        "rank": "J",
+        "suit": "h"
+      },
+      {
+        "rank": "3",
+        "suit": "h"
+      },
+      {
+        "rank": "K",
+        "suit": "h"
+      }
+    ],
+    "tag": "VALUE_BET",
+    "handStrengthPercentile": 78.5,
+    "betSizeRatio": 0.48,
+    "street": "RIVER"
+  },
+  {
+    "timestamp": 1778126006.5057259,
+    "playerId": "IuhlMBEBDFByLcCXSjGuj",
+    "playerName": "Luna",
+    "holeCards": [
+      {
+        "rank": "5",
+        "suit": "s"
+      },
+      {
+        "rank": "2",
+        "suit": "h"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "6",
+        "suit": "s"
+      },
+      {
+        "rank": "3",
+        "suit": "d"
+      },
+      {
+        "rank": "T",
+        "suit": "s"
+      },
+      {
+        "rank": "K",
+        "suit": "h"
+      },
+      {
+        "rank": "5",
+        "suit": "c"
+      }
+    ],
+    "tag": "BLUFF",
+    "handStrengthPercentile": 27.9,
+    "betSizeRatio": 1.12,
+    "street": "TURN"
+  },
+  {
+    "timestamp": 1778126006.5057259,
+    "playerId": "tXYBA8EsmYZxSgnkp4Tb7",
+    "playerName": "Rex",
+    "holeCards": [
+      {
+        "rank": "A",
+        "suit": "c"
+      },
+      {
+        "rank": "J",
+        "suit": "h"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "6",
+        "suit": "s"
+      },
+      {
+        "rank": "3",
+        "suit": "d"
+      },
+      {
+        "rank": "T",
+        "suit": "s"
+      },
+      {
+        "rank": "K",
+        "suit": "h"
+      },
+      {
+        "rank": "5",
+        "suit": "c"
+      }
+    ],
+    "tag": "BLUFF",
+    "handStrengthPercentile": 16.5,
+    "betSizeRatio": 0.5,
+    "street": "RIVER"
+  },
+  {
+    "timestamp": 1778139462.814643,
+    "playerId": "ZUBLqKMl2YHGyeLFznK58",
+    "playerName": "Player 1",
+    "holeCards": [
+      {
+        "rank": "9",
+        "suit": "c"
+      },
+      {
+        "rank": "T",
+        "suit": "s"
+      }
+    ],
+    "communityCards": [
+      {
+        "rank": "5",
+        "suit": "h"
+      },
+      {
+        "rank": "J",
+        "suit": "h"
+      },
+      {
+        "rank": "8",
+        "suit": "d"
+      },
+      {
+        "rank": "3",
+        "suit": "d"
+      },
+      {
+        "rank": "5",
+        "suit": "c"
+      }
+    ],
+    "tag": "BLUFF",
+    "handStrengthPercentile": 27.1,
+    "betSizeRatio": 0.5,
+    "street": "PREFLOP"
   }
 ]

@@ -1,6 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart as RechartsBarChart,
+  CartesianGrid,
+  Cell,
+  ComposedChart,
+  Legend as RechartsLegend,
+  Line,
+  Pie,
+  PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { useGameStore } from '../../store/game-store';
 import { useAIStore } from '../../store/ai-store';
 import { useProfileStore } from '../../store/profile-store';
@@ -9,11 +31,27 @@ import { getTrainingStats } from '../../api/ai-api';
 import type { TrainingStatsResult } from '../../types/ai';
 
 type ChartPoint = { label: string; value: number };
+type EnhancedChartPoint = { label: string; value: number; labelled?: number };
 type RecentBatchPoint = {
   label: string;
   examples: number;
   labelled: number;
   aggressive: number;
+};
+type FeatureSignal = { feature: string; score: number; note: string };
+type RadarPoint = { metric: string; value: number; fullMark: number };
+type PiePoint = { label: string; value: number };
+
+const CHART_COLORS = ['#DFC589', '#7FA1D9', '#5F8CCB', '#6FA7B4', '#C8A45B', '#4E6A95'];
+const CHART_GRID = 'rgba(155,175,210,.16)';
+const CHART_AXIS = 'rgba(130,152,189,.34)';
+const CHART_TICK = '#AAB7CF';
+const TOOLTIP_STYLE = {
+  backgroundColor: 'rgba(8,13,22,0.95)',
+  border: '1px solid rgba(206,177,113,.42)',
+  borderRadius: '12px',
+  color: '#E6ECF8',
+  fontSize: '12px',
 };
 
 export function StatsScreen() {
@@ -25,9 +63,26 @@ export function StatsScreen() {
   const [trainingStats, setTrainingStats] = useState<TrainingStatsResult | null>(null);
   const [trainingStatsError, setTrainingStatsError] = useState(false);
 
-  const stats = useMemo(() => {
-    if (!gameState) return null;
-    return deriveGameStats(gameState, profiles, confidenceScores, equityHistory);
+  const stats = useMemo<DerivedGameStats>(() => {
+    if (gameState) {
+      return deriveGameStats(gameState, profiles, confidenceScores, equityHistory);
+    }
+
+    return {
+      roundsPlayed: 0,
+      totalPot: 0,
+      averagePot: 0,
+      largestPot: 0,
+      potTrend: [],
+      actionBreakdown: [],
+      profileBluffRates: [],
+      profileExperience: [],
+      confidenceScores: [],
+      playerStats: [],
+      profileStats: [],
+      equityHistory: [],
+      recentRounds: [],
+    };
   }, [confidenceScores, equityHistory, gameState, profiles]);
 
   useEffect(() => {
@@ -50,7 +105,14 @@ export function StatsScreen() {
 
   return (
     <div className="min-h-screen px-4 py-5 md:px-8"
-         style={{ background: 'radial-gradient(ellipse at center top, #1A1A1A 0%, #0A0A0A 58%)' }}>
+         style={{
+           background: `
+             radial-gradient(ellipse at 50% 8%, rgba(224,191,124,.15) 0%, rgba(224,191,124,.05) 25%, transparent 52%),
+             radial-gradient(ellipse at 12% 20%, rgba(88,110,154,.12) 0%, transparent 36%),
+             radial-gradient(ellipse at 84% 14%, rgba(82,103,145,.1) 0%, transparent 34%),
+             radial-gradient(ellipse at center, #1a2232 0%, #101725 48%, #090f18 76%, #060b12 100%)
+           `,
+         }}>
       <header className="mx-auto mb-6 flex max-w-7xl items-center justify-between gap-4">
         <button
           onClick={() => navigate(gameState ? '/game' : '/')}
@@ -74,9 +136,7 @@ export function StatsScreen() {
         </button>
       </header>
 
-      {!stats
-        ? <EmptyState onStart={() => navigate('/setup')} />
-        : <StatsContent stats={stats} trainingStats={trainingStats} trainingStatsError={trainingStatsError} />}
+      <StatsContent stats={stats} trainingStats={trainingStats} trainingStatsError={trainingStatsError} />
     </div>
   );
 }
@@ -119,13 +179,63 @@ function StatsContent({
       labelled: hand.labelled,
       aggressive: hand.aggressiveActions,
     }));
+  const learningCurveEnhanced: EnhancedChartPoint[] = (trainingStats?.learningCurve ?? []).map(point => ({
+    label: point.label,
+    value: point.value,
+    labelled: point.labelled ?? 0,
+  }));
+  const topProfile = stats.profileStats[0] ?? null;
+  const topProfileRadar: RadarPoint[] = topProfile ? [
+    { metric: 'Bluffing', value: topProfile.bluffFrequency, fullMark: 100 },
+    { metric: 'Overbet', value: topProfile.overbetBluffRate, fullMark: 100 },
+    { metric: 'River', value: topProfile.riverBluffRate, fullMark: 100 },
+    { metric: 'Slow Action', value: topProfile.slowActionBluffRate, fullMark: 100 },
+    { metric: 'Snap Action', value: topProfile.snapActionBluffRate, fullMark: 100 },
+    { metric: 'Passive', value: topProfile.passivePlayRate, fullMark: 100 },
+  ] : [];
+  const featureSignals: FeatureSignal[] = [
+    {
+      feature: 'Bet Sizing Bayesian Signal',
+      score: Math.round(
+        stats.profileStats.length > 0
+          ? stats.profileStats.reduce((sum, profile) => sum + profile.overbetBluffRate, 0) / stats.profileStats.length
+          : 0
+      ),
+      note: 'P(bluff | sizing) from confidence model',
+    },
+    {
+      feature: 'Street Coverage (PREFLOP-RIVER)',
+      score: scoreStreetCoverage(trainingStats),
+      note: 'XGBoost learns better with full-street examples',
+    },
+    {
+      feature: 'Action Label Supervision',
+      score: trainingStats?.labelCoverage ?? 0,
+      note: 'Audit tags: BLUFF / VALUE / SLOW_PLAY / PASSIVE',
+    },
+    {
+      feature: 'Opponent Memory Bank',
+      score: Math.min(100, totalProfileHands * 8),
+      note: 'Profile history used for adaptive exploitation',
+    },
+    {
+      feature: 'Confidence Model Signal Strength',
+      score: signalStrength,
+      note: 'Distance from unknown priors across features',
+    },
+  ];
+  const momentum = learningCurveEnhanced.length > 1
+    ? learningCurveEnhanced[learningCurveEnhanced.length - 1].value - learningCurveEnhanced[0].value
+    : learningCurveEnhanced[0]?.value ?? 0;
+  const tagPieData: PiePoint[] = trainingStats?.tagDistribution ?? [];
+  const actionPieData: PiePoint[] = trainingStats?.actionDistribution ?? [];
 
   return (
     <main className="mx-auto grid max-w-7xl gap-4">
       <section className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-        <div className="relative overflow-hidden rounded-3xl border border-gold-border/35 bg-gradient-to-br from-noir-card via-noir-surface to-noir-bg p-5 shadow-[0_24px_70px_rgba(0,0,0,0.42)]">
+        <div className="relative overflow-hidden rounded-3xl border border-gold-border/35 bg-gradient-to-br from-[#1d2738] via-[#141d2c] to-[#0d131f] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.48)]">
           <div className="pointer-events-none absolute inset-0 opacity-70"
-               style={{ background: 'radial-gradient(circle at 18% 0%, rgba(201,168,76,.22), transparent 32%), radial-gradient(circle at 92% 20%, rgba(82,113,255,.14), transparent 30%)' }}
+               style={{ background: 'radial-gradient(circle at 18% 0%, rgba(201,168,76,.2), transparent 32%), radial-gradient(circle at 92% 20%, rgba(108,136,201,.16), transparent 30%)' }}
           />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-light/70 to-transparent" />
           <div className="relative">
@@ -135,16 +245,19 @@ function StatsContent({
                 Model Readiness
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-text-muted">
-                This page tracks whether the AI is collecting enough labelled,
-                balanced examples to improve its decision model and opponent reads.
+                Judge view: this dashboard shows training quality, Bayesian confidence features,
+                and opponent adaptation signals used by the poker AI stack.
               </p>
             </div>
-          <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <MetricCard label="Readiness" value={`${readiness}%`} sub="overall score" />
-            <MetricCard label="Examples" value={(trainingStats?.trainingExamples ?? 0).toLocaleString()} sub="model rows" />
-            <MetricCard label="Coverage" value={`${trainingStats?.labelCoverage ?? 0}%`} sub="labelled data" />
-            <MetricCard label="Signals" value={`${signalStrength}%`} sub="opponent reads" />
-          </div>
+            <div className="mt-5 grid gap-4 md:grid-cols-[1fr_auto]">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <MetricCard label="Readiness" value={`${readiness}%`} sub="overall score" />
+                <MetricCard label="Examples" value={(trainingStats?.trainingExamples ?? 0).toLocaleString()} sub="model rows" />
+                <MetricCard label="Coverage" value={`${trainingStats?.labelCoverage ?? 0}%`} sub="labelled data" />
+                <MetricCard label="Signals" value={`${signalStrength}%`} sub="opponent reads" />
+              </div>
+              <ReadinessDial readiness={readiness} />
+            </div>
           </div>
         </div>
 
@@ -163,35 +276,33 @@ function StatsContent({
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-        <Panel title="Training Health" subtitle="What the AI still needs">
-          <div className="grid gap-3 md:grid-cols-2">
-            <HealthRow label="Dataset Size" value={scoreDatasetSize(trainingStats)} detail={`${trainingStats?.trainingExamples ?? 0} examples`} />
-            <HealthRow label="Label Quality" value={trainingStats?.labelCoverage ?? 0} detail={`${trainingStats?.labelledExamples ?? 0} labelled`} />
-            <HealthRow label="Opponent Memory" value={Math.min(100, totalProfileHands * 8)} detail={`${totalProfileHands} profiled hands`} />
-            <HealthRow label="Street Coverage" value={scoreStreetCoverage(trainingStats)} detail="preflop to river mix" />
-          </div>
+        <Panel title="AI Algorithm Signals" subtitle="What powers bluff detection and adaptation">
+          <AlgorithmSignalBoard data={featureSignals} />
         </Panel>
-        <Panel title="Recent Learning Trend" subtitle="Useful replacement for game records">
+        <Panel title="Recent Learning Trend" subtitle="Training + audit throughput by round">
           <RecentBatchGraph data={recentLearningBatches} emptyText="Recent training batches appear after audited hands." />
         </Panel>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
-        <Panel title="Learning Curve" subtitle="Cumulative model examples from SQLite">
+        <Panel title="Learning Curve" subtitle="Cumulative examples and supervised labels">
           {trainingStatsError ? (
             <EmptyPanel text="Start the Python backend to read local SQLite training stats." />
           ) : (
-            <LineChart data={trainingStats?.learningCurve ?? []} emptyText="Audited hands will create model training examples." />
+            <LineChart data={learningCurveEnhanced} emptyText="Audited hands will create model training examples." />
           )}
+          <div className="mt-3 rounded-xl border border-noir-border/80 bg-[#0b1320]/55 px-3 py-2 font-[DM_Mono] text-xs text-text-muted">
+            Training momentum: <span className="text-gold-light">{momentum >= 0 ? '+' : ''}{momentum} examples</span> over the visible rounds.
+          </div>
         </Panel>
-        <Panel title="Label Quality" subtitle="Audit tags the model can learn from">
-          <BarChart data={trainingStats?.tagDistribution ?? []} emptyText="No audited labels recorded yet." />
+        <Panel title="Label Quality" subtitle="Audit tags that supervise the model">
+          <DonutChart data={tagPieData} emptyText="No audited labels recorded yet." />
         </Panel>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
         <Panel title="Decision Target Balance" subtitle="Fold, call, raise, and all-in examples">
-          <BarChart data={trainingStats?.actionDistribution ?? []} emptyText="Action targets appear after audited hands." />
+          <DonutChart data={actionPieData} emptyText="Action targets appear after audited hands." />
         </Panel>
         <Panel title="Street Coverage" subtitle="Does training data cover the full hand?">
           <BarChart data={trainingStats?.streetDistribution ?? []} emptyText="No street-level examples recorded yet." />
@@ -202,8 +313,12 @@ function StatsContent({
         <Panel title="Opponent Model Maturity" subtitle="How much memory each opponent profile has">
           <BarChart data={profileMaturity} emptyText="Opponent profiles build after completed hands." />
         </Panel>
-        <Panel title="Live Bluff Confidence" subtitle="Current read strength by opponent">
-          <BarChart data={stats.confidenceScores} emptyText="Confidence reads appear when opponents bet or raise." />
+        <Panel title="Top Opponent Radar" subtitle="High-level personality fingerprint">
+          <TopProfileRadar
+            profileName={topProfile?.name ?? null}
+            data={topProfileRadar}
+            emptyText="Play more rounds to build a radar profile."
+          />
         </Panel>
       </section>
 
@@ -220,44 +335,26 @@ function StatsContent({
           )}
         </Panel>
         <Panel title="Exploitability Signals" subtitle="Patterns the AI can use against each opponent">
-          <BarChart data={exploitabilitySignals} emptyText="Behavioral signals appear after profiles update." />
+          <ExploitabilityChart data={exploitabilitySignals} emptyText="Behavioral signals appear after profiles update." />
         </Panel>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1fr_1fr]">
-        <Panel title="Advisor Equity Signal" subtitle="Still useful, but secondary to learning">
+        <Panel title="Advisor Equity Signal" subtitle="Monte Carlo equity trace from in-game calls">
           <LineChart data={stats.equityHistory} valueSuffix="%" maxValue={100} emptyText="Equity appears after AI scoring runs." />
         </Panel>
-        <Panel title="Action Mix" subtitle="Current fold, call, raise, and all-in volume">
-          <BarChart data={stats.actionBreakdown} emptyText="Action mix appears after completed hands." />
+        <Panel title="Live Bluff Confidence" subtitle="Current read strength by opponent">
+          <BarChart data={stats.confidenceScores} emptyText="Confidence reads appear when opponents bet or raise." />
         </Panel>
       </section>
 
-      <section className="grid gap-4">
-        <Panel title="What Improves Next" subtitle="Practical interpretation">
-          <div className="grid gap-3 md:grid-cols-3">
-            <InsightCard
-              title="More Labels"
-              text="Showdowns and audits teach the model which actions were bluffs, value bets, folds, or passive lines."
-            />
-            <InsightCard
-              title="Better Balance"
-              text="The model becomes safer when folds, calls, raises, streets, and opponent styles are all represented."
-            />
-            <InsightCard
-              title="Opponent Adaptation"
-              text="Profiles improve as the AI sees repeated betting patterns from the same bots or players."
-            />
-          </div>
-        </Panel>
-      </section>
     </main>
   );
 }
 
 function MetricCard({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-2xl border border-gold-border/25 bg-noir-card/80 p-4 shadow-card transition-transform hover:-translate-y-0.5">
+    <div className="rounded-2xl border border-gold-border/25 bg-[#121b2a]/90 p-4 shadow-[0_10px_24px_rgba(0,0,0,0.35)] transition-transform hover:-translate-y-0.5">
       <div className="font-[DM_Mono] text-[10px] uppercase tracking-[0.2em] text-text-muted">{label}</div>
       <div className="mt-2 font-[Cinzel] text-2xl text-gold-light">{value}</div>
       {sub && <div className="mt-1 font-[DM_Mono] text-[10px] uppercase tracking-[0.14em] text-text-muted">{sub}</div>}
@@ -268,7 +365,7 @@ function MetricCard({ label, value, sub }: { label: string; value: string; sub?:
 function StatusPill({ label, tone }: { label: string; tone: 'ready' | 'warn' }) {
   const color = tone === 'ready' ? '#7FD08A' : '#E8B45F';
   return (
-    <div className="inline-flex items-center gap-2 rounded-full border border-gold-border/35 bg-noir-bg/60 px-3 py-1 font-[DM_Mono] text-[10px] uppercase tracking-[0.2em] text-text-muted">
+    <div className="inline-flex items-center gap-2 rounded-full border border-gold-border/35 bg-[#0b1320]/65 px-3 py-1 font-[DM_Mono] text-[10px] uppercase tracking-[0.2em] text-text-muted">
       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 14px ${color}` }} />
       {label}
     </div>
@@ -284,20 +381,11 @@ function HealthRow({ label, value, detail }: { label: string; value: number; det
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-noir-bg">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-gold-dark to-gold-light"
+          className="h-full rounded-full bg-gradient-to-r from-[#4f658f] via-[#7d9fd8] to-[#dcc283]"
           style={{ width: `${Math.max(4, Math.min(100, value))}%` }}
         />
       </div>
       <div className="mt-1 font-[DM_Mono] text-[10px] text-text-muted">{detail}</div>
-    </div>
-  );
-}
-
-function InsightCard({ title, text }: { title: string; text: string }) {
-  return (
-    <div className="rounded-xl border border-noir-border bg-noir-bg/45 p-4">
-      <h3 className="font-[Cinzel] text-base text-gold-light">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-text-muted">{text}</p>
     </div>
   );
 }
@@ -312,7 +400,7 @@ function Panel({
   children: ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-noir-border bg-noir-card/70 p-4 shadow-[0_18px_55px_rgba(0,0,0,0.36)]">
+    <section className="rounded-2xl border border-noir-border/85 bg-[#111a2a]/74 p-4 shadow-[0_18px_55px_rgba(0,0,0,0.4)]">
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
           <h2 className="font-[Cinzel] text-lg text-text-primary">{title}</h2>
@@ -330,53 +418,47 @@ function LineChart({
   valueSuffix = '',
   emptyText,
 }: {
-  data: ChartPoint[];
+  data: EnhancedChartPoint[];
   maxValue?: number;
   valueSuffix?: string;
   emptyText: string;
 }) {
   if (data.length === 0) return <EmptyPanel text={emptyText} />;
-
-  const width = 520;
-  const height = 190;
-  const padding = 24;
-  const values = data.map(point => point.value);
-  const max = maxValue ?? Math.max(...values, 1);
-  const min = maxValue ? 0 : Math.min(...values, 0);
-  const span = Math.max(1, max - min);
-  const points = data.map((point, index) => {
-    const x = data.length === 1
-      ? width / 2
-      : padding + (index / (data.length - 1)) * (width - padding * 2);
-    const y = height - padding - ((point.value - min) / span) * (height - padding * 2);
-    return { ...point, x, y };
-  });
-  const path = points.map(point => `${point.x},${point.y}`).join(' ');
-  const last = points[points.length - 1];
+  const last = data[data.length - 1];
+  const hasLabelled = data.some(point => point.labelled != null);
 
   return (
     <div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-56 w-full overflow-visible">
-        <defs>
-          <linearGradient id="lineGold" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="#8B7332" />
-            <stop offset="100%" stopColor="#E8D5A3" />
-          </linearGradient>
-        </defs>
-        <line x1={padding} y1={height - padding} x2={width - padding} y2={height - padding} stroke="rgba(255,255,255,.08)" />
-        <line x1={padding} y1={padding} x2={padding} y2={height - padding} stroke="rgba(255,255,255,.08)" />
-        <polyline points={path} fill="none" stroke="url(#lineGold)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-        {points.map(point => (
-          <g key={`${point.label}-${point.x}`}>
-            <circle cx={point.x} cy={point.y} r="4" fill="#C9A84C" />
-            <text x={point.x} y={height - 5} textAnchor="middle" fill="rgba(245,240,232,.42)" fontSize="10">
-              {point.label}
-            </text>
-          </g>
-        ))}
-      </svg>
+      <div className="h-60 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={data}>
+            <defs>
+              <linearGradient id="examplesFill" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="5%" stopColor="#E8D5A3" stopOpacity={0.45} />
+                <stop offset="95%" stopColor="#E8D5A3" stopOpacity={0.03} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke={CHART_GRID} strokeDasharray="4 4" />
+            <XAxis dataKey="label" tick={{ fill: CHART_TICK, fontSize: 11 }} axisLine={{ stroke: CHART_AXIS }} />
+            <YAxis
+              tick={{ fill: CHART_TICK, fontSize: 11 }}
+              axisLine={{ stroke: CHART_AXIS }}
+              domain={maxValue ? [0, maxValue] : ['auto', 'auto']}
+            />
+            <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ stroke: 'rgba(232,213,163,.28)' }} />
+            <RechartsLegend wrapperStyle={{ fontSize: '11px', color: CHART_TICK }} />
+            <Area type="monotone" dataKey="value" name="Examples" stroke="#E8D5A3" strokeWidth={2.6} fill="url(#examplesFill)" />
+            {hasLabelled && (
+              <Line type="monotone" dataKey="labelled" name="Labelled" stroke="#7DA8FF" strokeWidth={2.1} dot={false} />
+            )}
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
       <div className="font-[DM_Mono] text-xs text-text-muted">
         Latest: <span className="text-gold-light">{Math.round(last.value).toLocaleString()}{valueSuffix}</span>
+        {hasLabelled && last.labelled != null && (
+          <span> · Labelled <span className="text-gold-light">{Math.round(last.labelled).toLocaleString()}</span></span>
+        )}
       </div>
     </div>
   );
@@ -384,24 +466,28 @@ function LineChart({
 
 function BarChart({ data, emptyText }: { data: ChartPoint[]; emptyText: string }) {
   if (data.length === 0) return <EmptyPanel text={emptyText} />;
-  const max = Math.max(...data.map(point => point.value), 1);
 
   return (
-    <div className="grid gap-3">
-      {data.map(point => (
-        <div key={point.label}>
-          <div className="mb-1 flex items-center justify-between font-[DM_Mono] text-xs">
-            <span className="text-text-secondary">{point.label}</span>
-            <span className="text-gold-light">{point.value}</span>
-          </div>
-          <div className="h-3 overflow-hidden rounded-full bg-noir-bg">
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-gold-dark to-gold-light"
-              style={{ width: `${Math.max(7, (point.value / max) * 100)}%` }}
-            />
-          </div>
-        </div>
-      ))}
+    <div className="h-64 w-full">
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsBarChart data={data} layout="vertical" margin={{ left: 8, right: 8, top: 8, bottom: 8 }}>
+          <CartesianGrid stroke={CHART_GRID} strokeDasharray="3 4" />
+          <XAxis type="number" tick={{ fill: CHART_TICK, fontSize: 11 }} axisLine={{ stroke: CHART_AXIS }} />
+          <YAxis
+            type="category"
+            dataKey="label"
+            width={95}
+            tick={{ fill: CHART_TICK, fontSize: 11 }}
+            axisLine={{ stroke: CHART_AXIS }}
+          />
+          <Tooltip contentStyle={TOOLTIP_STYLE} cursor={{ fill: 'rgba(232,213,163,0.05)' }} />
+          <Bar dataKey="value" radius={[0, 8, 8, 0]}>
+            {data.map((point, index) => (
+              <Cell key={point.label} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+            ))}
+          </Bar>
+        </RechartsBarChart>
+      </ResponsiveContainer>
     </div>
   );
 }
@@ -414,59 +500,23 @@ function RecentBatchGraph({
   emptyText: string;
 }) {
   if (data.length === 0) return <EmptyPanel text={emptyText} />;
-
-  const width = 640;
-  const height = 230;
-  const padding = 30;
-  const max = Math.max(...data.flatMap(point => [point.examples, point.labelled, point.aggressive]), 1);
-  const getX = (index: number) => data.length === 1
-    ? width / 2
-    : padding + (index / (data.length - 1)) * (width - padding * 2);
-  const getY = (value: number) => height - padding - (value / max) * (height - padding * 2);
-  const buildPath = (key: keyof Omit<RecentBatchPoint, 'label'>) => data
-    .map((point, index) => `${getX(index)},${getY(point[key])}`)
-    .join(' ');
   const latest = data[data.length - 1];
 
   return (
     <div>
-      <svg viewBox={`0 0 ${width} ${height}`} className="h-64 w-full overflow-visible rounded-2xl border border-noir-border bg-noir-bg/35">
-        <defs>
-          <linearGradient id="batchExamples" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="#8B7332" />
-            <stop offset="100%" stopColor="#E8D5A3" />
-          </linearGradient>
-          <linearGradient id="batchLabels" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="#5F7DFF" />
-            <stop offset="100%" stopColor="#A9B8FF" />
-          </linearGradient>
-          <linearGradient id="batchAggro" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stopColor="#B85C52" />
-            <stop offset="100%" stopColor="#F0A28E" />
-          </linearGradient>
-        </defs>
-        {[0.25, 0.5, 0.75, 1].map(mark => (
-          <line
-            key={mark}
-            x1={padding}
-            y1={getY(max * mark)}
-            x2={width - padding}
-            y2={getY(max * mark)}
-            stroke="rgba(255,255,255,.06)"
-          />
-        ))}
-        <polyline points={buildPath('examples')} fill="none" stroke="url(#batchExamples)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-        <polyline points={buildPath('labelled')} fill="none" stroke="url(#batchLabels)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-        <polyline points={buildPath('aggressive')} fill="none" stroke="url(#batchAggro)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-        {data.map((point, index) => (
-          <g key={point.label}>
-            <text x={getX(index)} y={height - 9} textAnchor="middle" fill="rgba(245,240,232,.48)" fontSize="10">
-              {point.label}
-            </text>
-            <circle cx={getX(index)} cy={getY(point.examples)} r="4" fill="#E8D5A3" />
-          </g>
-        ))}
-      </svg>
+      <div className="h-64 w-full rounded-2xl border border-noir-border/80 bg-[#0b1320]/55 p-2">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={data}>
+            <CartesianGrid stroke={CHART_GRID} strokeDasharray="3 4" />
+            <XAxis dataKey="label" tick={{ fill: CHART_TICK, fontSize: 11 }} axisLine={{ stroke: CHART_AXIS }} />
+            <YAxis tick={{ fill: CHART_TICK, fontSize: 11 }} axisLine={{ stroke: CHART_AXIS }} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Line type="monotone" dataKey="examples" stroke="#E8D5A3" strokeWidth={2.5} dot={false} />
+            <Line type="monotone" dataKey="labelled" stroke="#A9B8FF" strokeWidth={2.3} dot={false} />
+            <Bar dataKey="aggressive" fill="#F0A28E" radius={[6, 6, 0, 0]} barSize={18} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           <Legend color="#E8D5A3" label="Examples" />
@@ -481,18 +531,183 @@ function RecentBatchGraph({
   );
 }
 
+function DonutChart({ data, emptyText }: { data: PiePoint[]; emptyText: string }) {
+  if (data.length === 0) return <EmptyPanel text={emptyText} />;
+  const total = data.reduce((sum, point) => sum + point.value, 0);
+
+  return (
+    <div>
+      <div className="h-64 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="value"
+              nameKey="label"
+              cx="50%"
+              cy="50%"
+              innerRadius={58}
+              outerRadius={96}
+              paddingAngle={2}
+            >
+              {data.map((entry, index) => (
+                <Cell key={entry.label} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <RechartsLegend
+              wrapperStyle={{ fontSize: '11px', color: CHART_TICK }}
+              formatter={(value) => <span className="text-text-secondary">{value}</span>}
+            />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="font-[DM_Mono] text-xs text-text-muted">
+        Total labelled points: <span className="text-gold-light">{total.toLocaleString()}</span>
+      </div>
+    </div>
+  );
+}
+
+function ExploitabilityChart({ data, emptyText }: { data: ChartPoint[]; emptyText: string }) {
+  if (data.length === 0) return <EmptyPanel text={emptyText} />;
+
+  const cleaned = data.map(point => ({
+    ...point,
+    shortLabel: point.label.length > 18 ? `${point.label.slice(0, 18)}...` : point.label,
+  }));
+
+  return (
+    <div className="h-80 w-full rounded-2xl border border-noir-border/80 bg-[#0b1320]/55 p-2">
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsBarChart data={cleaned} layout="vertical" margin={{ left: 18, right: 12, top: 8, bottom: 8 }}>
+          <CartesianGrid stroke={CHART_GRID} strokeDasharray="3 4" />
+          <XAxis
+            type="number"
+            domain={[0, 100]}
+            tick={{ fill: CHART_TICK, fontSize: 11 }}
+            axisLine={{ stroke: CHART_AXIS }}
+          />
+          <YAxis
+            type="category"
+            dataKey="shortLabel"
+            width={140}
+            tick={{ fill: CHART_TICK, fontSize: 11 }}
+            axisLine={{ stroke: CHART_AXIS }}
+          />
+          <Tooltip
+            contentStyle={TOOLTIP_STYLE}
+            cursor={{ fill: 'rgba(232,213,163,0.05)' }}
+          />
+          <Bar dataKey="value" radius={[0, 8, 8, 0]}>
+            {cleaned.map((point, index) => (
+              <Cell key={point.label} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+            ))}
+          </Bar>
+        </RechartsBarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 function Legend({ color, label }: { color: string; label: string }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-noir-border bg-noir-bg/45 px-3 py-1 font-[DM_Mono] text-[10px] uppercase tracking-[0.14em] text-text-muted">
+    <span className="inline-flex items-center gap-2 rounded-full border border-noir-border/80 bg-[#0b1320]/58 px-3 py-1 font-[DM_Mono] text-[10px] uppercase tracking-[0.14em] text-text-muted">
       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
       {label}
     </span>
   );
 }
 
+function ReadinessDial({ readiness }: { readiness: number }) {
+  const safe = Math.max(0, Math.min(100, readiness));
+  const data = [
+    { name: 'Readiness', value: safe },
+    { name: 'Remaining', value: 100 - safe },
+  ];
+
+  return (
+    <div className="flex min-w-40 flex-col items-center justify-center rounded-2xl border border-gold-border/30 bg-[#0b1320]/55 p-3">
+      <div className="h-24 w-24">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="value"
+              startAngle={90}
+              endAngle={-270}
+              innerRadius={28}
+              outerRadius={42}
+              stroke="none"
+            >
+              <Cell fill="#E8D5A3" />
+              <Cell fill="rgba(255,255,255,0.1)" />
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="-mt-14 font-[Cinzel] text-2xl text-gold-light">{safe}%</div>
+      <div className="mt-6 font-[DM_Mono] text-[10px] uppercase tracking-[0.14em] text-text-muted">Readiness Dial</div>
+    </div>
+  );
+}
+
+function AlgorithmSignalBoard({ data }: { data: FeatureSignal[] }) {
+  return (
+    <div className="space-y-3">
+      {data.map((signal) => (
+        <div key={signal.feature} className="rounded-xl border border-noir-border/80 bg-[#0b1320]/55 p-3">
+          <div className="mb-1 flex items-center justify-between gap-3">
+            <div className="font-[DM_Mono] text-xs text-text-secondary">{signal.feature}</div>
+            <div className="font-[DM_Mono] text-xs text-gold-light">{signal.score}%</div>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-noir-card">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#4f658f] via-[#7d9fd8] to-[#dcc283]"
+              style={{ width: `${Math.max(6, signal.score)}%` }}
+            />
+          </div>
+          <div className="mt-1 font-[DM_Mono] text-[10px] text-text-muted">{signal.note}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TopProfileRadar({
+  profileName,
+  data,
+  emptyText,
+}: {
+  profileName: string | null;
+  data: RadarPoint[];
+  emptyText: string;
+}) {
+  if (!profileName || data.length === 0) return <EmptyPanel text={emptyText} />;
+
+  return (
+    <div>
+      <div className="mb-2 font-[DM_Mono] text-xs text-text-muted">
+        Profile focus: <span className="text-gold-light">{profileName}</span>
+      </div>
+      <div className="h-64 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <RadarChart data={data}>
+            <PolarGrid stroke="rgba(255,255,255,.14)" />
+            <PolarAngleAxis dataKey="metric" tick={{ fill: '#B8B0A0', fontSize: 11 }} />
+            <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+            <Tooltip contentStyle={TOOLTIP_STYLE} />
+            <Radar dataKey="value" stroke="#E8D5A3" fill="#E8D5A3" fillOpacity={0.32} />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 function ProfileCard({ profile }: { profile: DerivedGameStats['profileStats'][number] }) {
   return (
-    <div className="rounded-xl border border-noir-border bg-noir-bg/45 p-4">
+    <div className="rounded-xl border border-noir-border/80 bg-[#0b1320]/58 p-4">
       <div className="flex items-center justify-between">
         <div>
           <div className="font-[Cinzel] text-base text-text-primary">{profile.name}</div>
@@ -524,7 +739,7 @@ function ProfileCard({ profile }: { profile: DerivedGameStats['profileStats'][nu
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-noir-border bg-noir-card px-2 py-2">
+    <div className="rounded-lg border border-noir-border/80 bg-[#111a2a] px-2 py-2">
       <div className="font-[DM_Mono] text-[9px] uppercase tracking-[0.12em] text-text-muted">{label}</div>
       <div className="mt-1 font-[DM_Mono] text-xs text-gold-light">{value}</div>
     </div>
@@ -533,26 +748,8 @@ function MiniStat({ label, value }: { label: string; value: string }) {
 
 function EmptyPanel({ text }: { text: string }) {
   return (
-    <div className="flex min-h-32 items-center justify-center rounded-xl border border-dashed border-noir-border bg-noir-bg/35 p-6 text-center font-[DM_Mono] text-xs text-text-muted">
+    <div className="flex min-h-32 items-center justify-center rounded-xl border border-dashed border-noir-border/90 bg-[#0b1320]/5 p-6 text-center font-[DM_Mono] text-xs text-text-muted">
       {text}
-    </div>
-  );
-}
-
-function EmptyState({ onStart }: { onStart: () => void }) {
-  return (
-    <div className="mx-auto flex min-h-[60vh] max-w-xl flex-col items-center justify-center rounded-2xl border border-noir-border bg-noir-card/70 p-8 text-center">
-      <h2 className="font-[Cinzel] text-2xl text-gold-light">No game data yet</h2>
-      <p className="mt-3 text-sm leading-relaxed text-text-muted">
-        Start a game and complete a few audited hands to unlock model readiness,
-        training labels, opponent reads, and XGBoost learning charts.
-      </p>
-      <button
-        onClick={onStart}
-        className="mt-6 rounded-lg border border-gold-primary/45 bg-gold-primary/10 px-6 py-3 font-[Cinzel] text-sm text-gold-light transition-colors hover:bg-gold-primary/20 cursor-pointer"
-      >
-        Start Game
-      </button>
     </div>
   );
 }

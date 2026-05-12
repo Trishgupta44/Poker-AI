@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import type { Player } from '../../types/player';
 import type { Card } from '../../types/card';
 import type { PlayerAction, ActionType } from '../../types/game';
@@ -15,6 +17,8 @@ interface PokerTableProps {
   isShowdown: boolean;
   actions?: PlayerAction[];
 }
+
+type SeatPosition = { x: string; y: string };
 
 function getSeatLayout(playerCount: number): Array<{ x: string; y: string }> {
   // Original rail-style seating: cards sit around the oval rather than on top
@@ -59,6 +63,49 @@ export function PokerTable({
     }
   });
 
+  const seatByPlayerId = useMemo(() => {
+    const layout = getSeatLayout(players.length);
+    const seatMap = new Map<string, SeatPosition>();
+
+    players.forEach((player, index) => {
+      const offset = (index - heroIndex + players.length) % players.length;
+      const position = layout[offset] || layout[0];
+      seatMap.set(player.id, position);
+    });
+
+    return seatMap;
+  }, [heroIndex, players]);
+
+  const [recentPotGain, setRecentPotGain] = useState<{ id: string; amount: number } | null>(null);
+  const lastAnimatedActionRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const lastBetAction = [...actions]
+      .reverse()
+      .find(action =>
+        action.action !== 'POST_BLIND' &&
+        action.action !== 'CHECK' &&
+        action.action !== 'FOLD' &&
+        action.amount > 0
+      );
+    if (!lastBetAction) return;
+
+    const actionKey = `${lastBetAction.timestamp}-${lastBetAction.playerId}-${lastBetAction.action}-${lastBetAction.amount}`;
+    if (lastAnimatedActionRef.current === actionKey) return;
+
+    const fromSeat = seatByPlayerId.get(lastBetAction.playerId);
+    if (!fromSeat) return;
+
+    lastAnimatedActionRef.current = actionKey;
+    setRecentPotGain({
+      id: actionKey,
+      amount: lastBetAction.amount,
+    });
+
+    const timeout = setTimeout(() => setRecentPotGain(null), 700);
+    return () => clearTimeout(timeout);
+  }, [actions, seatByPlayerId]);
+
   return (
     <div className="relative w-full max-w-[800px] mx-auto overflow-visible" style={{ aspectRatio: '16/9' }}>
       {/* Ambient felt glow */}
@@ -70,10 +117,24 @@ export function PokerTable({
           left: '13%',
           top: '19%',
           borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(20,105,55,.45) 0%, rgba(201,168,76,.09) 46%, transparent 74%)',
+          background: 'radial-gradient(ellipse, rgba(60,84,145,.42) 0%, rgba(201,168,76,.14) 46%, transparent 74%)',
           filter: 'blur(28px)',
           animation: 'aGlow 4s ease-in-out infinite alternate',
         }}
+      />
+      <motion.div
+        className="absolute pointer-events-none"
+        style={{
+          width: '72%',
+          height: '60%',
+          left: '14%',
+          top: '20%',
+          borderRadius: '50%',
+          background: 'radial-gradient(ellipse at 50% 45%, rgba(210,224,255,.12), rgba(210,224,255,.025) 42%, transparent 70%)',
+          mixBlendMode: 'screen',
+        }}
+        animate={{ opacity: [0.22, 0.4, 0.24] }}
+        transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
       />
 
       {/* ── Multi-layered oval table ── */}
@@ -92,7 +153,7 @@ export function PokerTable({
             width: '100%',
             height: '100%',
             borderRadius: 999,
-            background: 'linear-gradient(160deg, #21170a, #090909 54%, #1a1207)',
+            background: 'linear-gradient(160deg, #1b202e, #0c1018 52%, #252d3d)',
             boxShadow: '0 22px 75px rgba(0,0,0,.88), inset 0 1px 0 rgba(255,255,255,.04)',
             padding: 7,
           }}
@@ -104,7 +165,7 @@ export function PokerTable({
               height: '100%',
               borderRadius: 999,
               padding: 3,
-              background: 'conic-gradient(from 0deg, #c9a84c 0%, #7a5210 18%, #c9a84c 36%, #e8c86a 54%, #7a5210 72%, #c9a84c 100%)',
+              background: 'conic-gradient(from 0deg, #ad8f4b 0%, #5e4a24 15%, #e2c985 33%, #5f4b27 52%, #b99a55 70%, #473717 85%, #ad8f4b 100%)',
               boxShadow: 'inset 0 2px 6px rgba(0,0,0,.5)',
             }}
           >
@@ -115,8 +176,11 @@ export function PokerTable({
                 height: '100%',
                 borderRadius: 999,
                 padding: 9,
-                background: 'radial-gradient(ellipse at 30% 25%, #3a2209, #140b03 68%)',
-                boxShadow: 'inset 0 6px 22px rgba(0,0,0,.68), inset 0 -2px 0 rgba(201,168,76,.1)',
+                background: `
+                  repeating-linear-gradient(22deg, rgba(255,255,255,.05) 0 2px, rgba(0,0,0,.03) 2px 6px),
+                  radial-gradient(ellipse at 28% 24%, #343e58, #21283a 46%, #101521 76%)
+                `,
+                boxShadow: 'inset 0 6px 22px rgba(0,0,0,.68), inset 0 -2px 0 rgba(240,205,147,.14), inset 0 1px 0 rgba(230,238,255,.16)',
               }}
             >
               {/* Layer 4: Thin gold inner accent */}
@@ -135,12 +199,23 @@ export function PokerTable({
                     width: '100%',
                     height: '100%',
                     borderRadius: 999,
-                    background: 'radial-gradient(ellipse at 42% 36%, #248144, #10502a 52%, #062713)',
+                    background: 'radial-gradient(ellipse at 42% 36%, #1f3049, #131f32 52%, #0a111f 84%)',
                     position: 'relative',
                     overflow: 'hidden',
-                    boxShadow: 'inset 0 5px 34px rgba(0,0,0,.52), inset 0 0 0 1px rgba(255,255,255,.035)',
+                    boxShadow: 'inset 0 5px 34px rgba(0,0,0,.58), inset 0 0 0 1px rgba(220,230,255,.05)',
                   }}
                 >
+                  <motion.div
+                    style={{
+                      position: 'absolute',
+                      inset: '-8%',
+                      borderRadius: '50%',
+                      background: 'linear-gradient(105deg, transparent 36%, rgba(210,225,255,.12) 49%, transparent 62%)',
+                      pointerEvents: 'none',
+                    }}
+                    animate={{ x: ['-32%', '32%'] }}
+                    transition={{ duration: 7, repeat: Infinity, repeatType: 'mirror', ease: 'easeInOut' }}
+                  />
                   {/* Micro weave texture */}
                   <div
                     style={{
@@ -148,7 +223,7 @@ export function PokerTable({
                       inset: 0,
                       borderRadius: 999,
                       backgroundImage: `repeating-linear-gradient(0deg, rgba(0,0,0,.05) 0, rgba(0,0,0,.05) 1px, transparent 1px, transparent 3px),
-                        repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0, rgba(0,0,0,.05) 1px, transparent 1px, transparent 3px)`,
+                        repeating-linear-gradient(90deg, rgba(0,0,0,.04) 0, rgba(0,0,0,.04) 1px, transparent 1px, transparent 3px)`,
                     }}
                   />
                   <div
@@ -156,8 +231,8 @@ export function PokerTable({
                       position: 'absolute',
                       inset: '14%',
                       borderRadius: 999,
-                      border: '1px solid rgba(232,213,163,.13)',
-                      boxShadow: 'inset 0 0 24px rgba(0,0,0,.18)',
+                      border: '1px solid rgba(216,226,255,.18)',
+                      boxShadow: 'inset 0 0 24px rgba(0,0,0,.22)',
                     }}
                   />
 
@@ -178,7 +253,11 @@ export function PokerTable({
 
                   {/* Community cards + Pot in center */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                    <PotDisplay amount={pot} />
+                    <PotDisplay
+                      amount={pot}
+                      recentGain={recentPotGain?.amount ?? null}
+                      recentGainToken={recentPotGain?.id ?? null}
+                    />
                     <CommunityCards cards={communityCards} />
                   </div>
                 </div>
@@ -194,7 +273,6 @@ export function PokerTable({
 
         // Calculate offset relative to hero
         const offset = (index - heroIndex + players.length) % players.length;
-        
         const layout = getSeatLayout(players.length);
         // Fallback to the first position if somehow offset is out of bounds
         const position = layout[offset] || layout[0];
